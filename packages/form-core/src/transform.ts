@@ -135,21 +135,11 @@ export function mergeAndUpdate<
   >) as Array<keyof AnyBaseFormState>
 
   const diffedObject = baseFormKeys.reduce((prev, key) => {
-    if (form.state[key] !== newObj.state[key]) {
-      prev[key] = newObj.state[key]
-    }
-    return prev
+      throw new Error("STUB");
   }, {} as Partial<AnyBaseFormState>)
 
   batch(() => {
-    if (Object.keys(diffedObject).length) {
-      form.baseStore.setState((prev) => ({ ...prev, ...diffedObject }))
-    }
-
-    if (newObj.state.errorMap !== form.state.errorMap) {
-      // Check if we need to update `fieldMetaBase` with `errorMaps` set by
-      form.setErrorMap(newObj.state.errorMap)
-    }
+      throw new Error("STUB");
   })
 
   return newObj

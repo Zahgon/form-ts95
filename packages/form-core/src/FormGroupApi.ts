@@ -691,13 +691,7 @@ export interface FormGroupState {
 function getDefaultFormGroupState(
   defaultState: Partial<FormGroupState>,
 ): FormGroupState {
-  return {
-    isSubmitted: defaultState.isSubmitted ?? false,
-    isSubmitting: defaultState.isSubmitting ?? false,
-    isValidating: defaultState.isValidating ?? false,
-    submissionAttempts: defaultState.submissionAttempts ?? 0,
-    isSubmitSuccessful: defaultState.isSubmitSuccessful ?? false,
-  }
+    throw new Error("STUB");
 }
 
 /**
@@ -948,23 +942,7 @@ export interface FormGroupStoreState<
 export function getDefaultFormGroupMeta(
   defaultMeta?: Partial<AnyFieldLikeMetaBase>,
 ): AnyFormGroupMeta {
-  return {
-    ...defaultFieldMeta,
-    ...defaultMeta,
-    errors: [],
-    isPristine: true,
-    isValid: true,
-    isDefaultValue: true,
-    isFieldsValidating: false,
-    isFieldsValid: true,
-    isGroupValid: true,
-    canSubmit: true,
-    isSubmitting: false,
-    isSubmitted: false,
-    isValidating: false,
-    submissionAttempts: 0,
-    isSubmitSuccessful: false,
-  } as AnyFormGroupMeta
+    throw new Error("STUB");
 }
 
 export class FormGroupApi<
@@ -1182,18 +1160,7 @@ export class FormGroupApi<
   private setFormGroupState = (
     updater: (prev: FormGroupState) => FormGroupState,
   ) => {
-    this.form.baseStore.setState((prev) => {
-      const prevGroupState =
-        prev.formGroupStateBase[this.name as never] ??
-        getDefaultFormGroupState({})
-      return {
-        ...prev,
-        formGroupStateBase: {
-          ...prev.formGroupStateBase,
-          [this.name as never]: updater(prevGroupState),
-        },
-      }
-    })
+      throw new Error("STUB");
   }
 
   timeoutIds: {
@@ -1292,59 +1259,8 @@ export class FormGroupApi<
             >
           | undefined,
       ) => {
-        // Subscribe to all form-level derived state that affects this
-        // group. Mirrors `FieldApi.store`'s minimal pattern: per-instance
-        // `store` only sources `{ value, meta }`; all heavy derivation
-        // lives on the parent `FormApi` (in `formGroupMetaDerived`).
-        this.form.formGroupMetaDerived.get()
-        this.form.baseStore.get()
-
-        const meta =
-          (this.form.getFormGroupMeta(this.name as never) as
-            | AnyFormGroupMeta
-            | undefined) ?? getDefaultFormGroupMeta(opts.defaultMeta as never)
-
-        let value = this.form.getFieldValue(this.name)
-        if (
-          !meta.isTouched &&
-          (value as unknown) === undefined &&
-          this.options.defaultValue !== undefined &&
-          !evaluate(value, this.options.defaultValue)
-        ) {
-          value = this.options.defaultValue
-        }
-
-        if (prevVal && prevVal.value === value && prevVal.meta === meta) {
-          return prevVal
-        }
-
-        return {
-          value,
-          meta,
-        } as FormGroupStoreState<
-          TParentData,
-          TName,
-          TData,
-          TOnMount,
-          TOnChange,
-          TOnChangeAsync,
-          TOnBlur,
-          TOnBlurAsync,
-          TOnSubmit,
-          TOnSubmitAsync,
-          TOnDynamic,
-          TOnDynamicAsync,
-          TFormOnMount,
-          TFormOnChange,
-          TFormOnChangeAsync,
-          TFormOnBlur,
-          TFormOnBlurAsync,
-          TFormOnSubmit,
-          TFormOnSubmitAsync,
-          TFormOnDynamic,
-          TFormOnDynamicAsync
-        >
-      },
+            throw new Error("STUB");
+        },
     )
 
     this.handleSubmit = this.handleSubmit.bind(this)
@@ -1456,17 +1372,7 @@ export class FormGroupApi<
     // `FieldApi.mount`'s lifecycle: per-group lifecycle state lives on
     // the form so it can be read off `FormApi` directly without walking
     // the mounted group instances.
-    this.form.baseStore.setState((prev) => ({
-      ...prev,
-      formGroupStateBase: {
-        ...prev.formGroupStateBase,
-        [this.name as never]:
-          prev.formGroupStateBase[this.name as never] ??
-          getDefaultFormGroupState({
-            ...(this.options.defaultState as Partial<FormGroupState>),
-          }),
-      },
-    }))
+    this.form.baseStore.setState((prev) => { throw new Error("STUB"); })
 
     const { onMount } = this.options.validators || {}
 
@@ -1492,17 +1398,7 @@ export class FormGroupApi<
       if (error) {
         this.setMeta(
           (prev) =>
-            ({
-              ...prev,
-              errorMap: {
-                ...prev.errorMap,
-                onMount: error,
-              },
-              errorSourceMap: {
-                ...prev.errorSourceMap,
-                onMount: 'field',
-              },
-            }) as never,
+            { throw new Error("STUB"); },
         )
       }
 
@@ -1515,66 +1411,7 @@ export class FormGroupApi<
     })
 
     return () => {
-      // Stop any in-flight async validation or listener work tied to this instance.
-      for (const [key, timeout] of Object.entries(
-        this.timeoutIds.validations,
-      )) {
-        if (timeout) {
-          clearTimeout(timeout)
-          this.timeoutIds.validations[
-            key as keyof typeof this.timeoutIds.validations
-          ] = null
-        }
-      }
-      for (const [key, timeout] of Object.entries(this.timeoutIds.listeners)) {
-        if (timeout) {
-          clearTimeout(timeout)
-          this.timeoutIds.listeners[
-            key as keyof typeof this.timeoutIds.listeners
-          ] = null
-        }
-      }
-      for (const [key, timeout] of Object.entries(
-        this.timeoutIds.formListeners,
-      )) {
-        if (timeout) {
-          clearTimeout(timeout)
-          this.timeoutIds.formListeners[
-            key as keyof typeof this.timeoutIds.formListeners
-          ] = null
-        }
-      }
-
-      if (this.fieldInfo.instance !== this) return
-
-      for (const [key, validationMeta] of Object.entries(
-        this.fieldInfo.validationMetaMap,
-      )) {
-        validationMeta?.lastAbortController.abort()
-        this.fieldInfo.validationMetaMap[
-          key as keyof typeof this.fieldInfo.validationMetaMap
-        ] = undefined
-      }
-
-      this.form.formGroupApis.delete(this)
-
-      // Reset this group's submission lifecycle state on the form. Mirrors
-      // `FieldApi.mount`'s teardown which resets `fieldMetaBase` for the
-      // unmounting field while preserving the entry on the parent store.
-      this.form.baseStore.setState((prev) => ({
-        ...prev,
-        formGroupStateBase: {
-          ...prev.formGroupStateBase,
-          [this.name as never]: getDefaultFormGroupState({}),
-        },
-      }))
-
-      this.fieldInfo.instance = null
-
-      this.options.listeners?.onUnmount?.({
-        value: this.state.value,
-        groupApi: this,
-      })
+        throw new Error("STUB");
     }
   }
 
@@ -1582,22 +1419,10 @@ export class FormGroupApi<
    * Sets the field value and run the `change` validator.
    */
   setValue = (updater: Updater<TData>, options?: UpdateMetaOptions) => {
-    this.form.setFieldValue(
-      this.name,
-      updater as never,
-      mergeOpts(options, { dontRunListeners: true, dontValidate: true }),
-    )
-
-    if (!options?.dontRunListeners) {
-      this.triggerOnChangeListener()
-    }
-
-    if (!options?.dontValidate) {
-      this.validate('change')
-    }
+      throw new Error("STUB");
   }
 
-  getMeta = () => this.store.state.meta
+  getMeta = () => { throw new Error("STUB"); }
 
   /**
    * Sets the field metadata.
@@ -1628,52 +1453,24 @@ export class FormGroupApi<
         TFormOnDynamicAsync
       >
     >,
-  ) => this.form.setFieldMeta(this.name, updater)
+  ) => { throw new Error("STUB"); }
 
   /**
    * Gets the field information object.
    */
-  getInfo = () => this.fieldInfo
+  getInfo = () => { throw new Error("STUB"); }
 
   /**
    * @private
    */
   getRelatedFields = () => {
-    const fields = Object.values(this.form.fieldInfo) as FieldInfo<any>[]
-
-    const relatedFields: AnyFieldApi[] = []
-    for (const field of fields) {
-      if (!field.instance) continue
-      // TODO: How to handle FormGroups?
-      if (!(field.instance instanceof FieldApi)) continue
-      if (field.instance.name.startsWith(this.name)) {
-        relatedFields.push(field.instance)
-      }
-    }
-
-    return relatedFields
+      throw new Error("STUB");
   }
   /**
    * @private
    */
   getRelatedFieldMetasDerived = () => {
-    const fields = Object.entries(this.form.fieldMetaDerived.state) as [
-      string,
-      AnyFieldLikeMeta,
-    ][]
-
-    const relatedFieldMetas: (AnyFieldLikeMeta & { name: string })[] = []
-    for (const [fieldName, fieldMeta] of fields) {
-      // Skip the group's own self-entry — its validity is tracked via
-      // `isGroupValid`. Including it here would conflate group-level
-      // validation with field-level validation in `isFieldsValid` etc.
-      if (fieldName === this.name) continue
-      if (isFieldInGroup(this.name, fieldName)) {
-        relatedFieldMetas.push({ ...fieldMeta, name: fieldName })
-      }
-    }
-
-    return relatedFieldMetas
+      throw new Error("STUB");
   }
 
   /**
@@ -1684,9 +1481,7 @@ export class FormGroupApi<
    * (`[0].name`) notation.
    */
   private buildChildFieldName = (relativeName: string): string => {
-    if (relativeName === '') return this.name as string
-    if (relativeName.startsWith('[')) return `${this.name}${relativeName}`
-    return `${this.name}.${relativeName}`
+      throw new Error("STUB");
   }
 
   /**
@@ -1701,70 +1496,7 @@ export class FormGroupApi<
     errorMapKey: string,
     fieldErrors: Record<string, unknown> | undefined,
   ): boolean => {
-    const previousNames =
-      this._lastDistributedFieldNames[errorMapKey] ?? new Set<string>()
-    const currentNames = new Set<string>()
-
-    if (fieldErrors) {
-      for (const [relativeName, err] of Object.entries(fieldErrors)) {
-        if (err === undefined || err === null || err === false) continue
-        currentNames.add(this.buildChildFieldName(relativeName))
-      }
-    }
-
-    const allNames = new Set<string>([...previousNames, ...currentNames])
-
-    let hasErrored = false
-    for (const fullName of allNames) {
-      const relativeName = fullName.startsWith(this.name + '[')
-        ? fullName.slice((this.name as string).length)
-        : fullName.slice((this.name as string).length + 1)
-      const newFormValidatorError = fieldErrors?.[relativeName] as
-        | ValidationError
-        | undefined
-
-      const fieldMeta = this.form.getFieldMeta(fullName as never)
-      if (!fieldMeta && !newFormValidatorError) continue
-
-      const previousErrorValue = fieldMeta?.errorMap[errorMapKey as never] as
-        | ValidationError
-        | undefined
-      const isPreviousErrorFromFormValidator =
-        (fieldMeta?.errorSourceMap[errorMapKey as never] as
-          | string
-          | undefined) === 'form'
-
-      const { newErrorValue, newSource } =
-        determineFormLevelErrorSourceAndValue({
-          newFormValidatorError,
-          isPreviousErrorFromFormValidator,
-          previousErrorValue,
-        })
-
-      if (newErrorValue) hasErrored = true
-
-      if (
-        previousErrorValue === newErrorValue &&
-        fieldMeta?.errorSourceMap[errorMapKey as never] === newSource
-      ) {
-        continue
-      }
-
-      this.form.setFieldMeta(fullName as never, (prev) => ({
-        ...prev,
-        errorMap: {
-          ...prev.errorMap,
-          [errorMapKey]: newErrorValue,
-        },
-        errorSourceMap: {
-          ...prev.errorSourceMap,
-          [errorMapKey]: newSource,
-        },
-      }))
-    }
-
-    this._lastDistributedFieldNames[errorMapKey] = currentNames
-    return hasErrored
+      throw new Error("STUB");
   }
 
   /**
@@ -1777,154 +1509,7 @@ export class FormGroupApi<
       skipRelatedFieldValidation?: boolean
     } = {},
   ) => {
-    const validates = getSyncValidatorArray(cause, {
-      ...this.options,
-      form: this.form,
-      group: this,
-      validationLogic:
-        this.options.validationLogic ||
-        this.form.options.validationLogic ||
-        defaultValidationLogic,
-    })
-
-    const relatedFields = opts.skipRelatedFieldValidation
-      ? []
-      : this.getRelatedFields()
-    const relatedFieldValidates = relatedFields.reduce(
-      (acc, field) => {
-        const fieldValidates = getSyncValidatorArray(cause, {
-          ...field.options,
-          form: field.form,
-          validationLogic:
-            field.form.options.validationLogic || defaultValidationLogic,
-        })
-        fieldValidates.forEach((validate) => {
-          ;(validate as any).field = field
-        })
-        return acc.concat(fieldValidates as never)
-      },
-      [] as Array<
-        SyncValidator<any> & {
-          field: AnyFieldApi
-        }
-      >,
-    )
-
-    // Needs type cast as eslint errantly believes this is always falsy
-    let hasErrored = false as boolean
-
-    batch(() => {
-      const validateFieldOrGroupFn = (
-        fieldOrGroup: AnyFieldApi | AnyFormGroupApi,
-        validateObj: SyncValidator<any>,
-      ) => {
-        const errorMapKey = getErrorMapKey(validateObj.cause)
-        const isGroup = fieldOrGroup === this
-
-        let rawError: unknown = undefined
-        if (validateObj.validate) {
-          rawError = (fieldOrGroup as any).runValidator({
-            validate: validateObj.validate,
-            value: {
-              value: fieldOrGroup.store.state.value,
-              // For the group's own validators we want standard schemas to
-              // produce a `{ form, fields }` shape (with relative keys) so
-              // we can fan errors out to children. Field-level validators on
-              // related fields keep the regular field source.
-              validationSource: isGroup ? 'form' : 'field',
-              ...(fieldOrGroup instanceof FormGroupApi
-                ? {
-                    groupApi: fieldOrGroup,
-                  }
-                : { fieldApi: fieldOrGroup }),
-            } as never,
-            type: 'validate',
-          })
-        }
-
-        let groupOwnRawError: unknown = rawError
-        let groupFieldErrors: Record<string, unknown> | undefined = undefined
-        if (isGroup && isGlobalGroupValidationError(rawError)) {
-          groupOwnRawError = rawError.group
-          groupFieldErrors = rawError.fields
-        }
-
-        const fieldLevelError = normalizeError(
-          groupOwnRawError as ValidationError,
-        )
-
-        const formLevelError = errorFromForm[errorMapKey]
-
-        const { newErrorValue, newSource } =
-          determineFieldLevelErrorSourceAndValue({
-            formLevelError,
-            fieldLevelError,
-          })
-
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        if (fieldOrGroup.state.meta.errorMap?.[errorMapKey] !== newErrorValue) {
-          fieldOrGroup.setMeta((prev) => ({
-            ...prev,
-            errorMap: {
-              ...prev.errorMap,
-              [errorMapKey]: newErrorValue,
-            },
-            errorSourceMap: {
-              ...prev.errorSourceMap,
-              [errorMapKey]: newSource,
-            },
-          }))
-        }
-        if (newErrorValue) {
-          hasErrored = true
-        }
-
-        if (isGroup) {
-          const distributedHasErrored = this.distributeFieldErrors(
-            errorMapKey,
-            groupFieldErrors,
-          )
-          if (distributedHasErrored) {
-            hasErrored = true
-          }
-        }
-      }
-
-      for (const validateObj of validates) {
-        validateFieldOrGroupFn(this, validateObj)
-      }
-      for (const fieldValidateObj of relatedFieldValidates) {
-        if (!fieldValidateObj.validate) continue
-        validateFieldOrGroupFn(fieldValidateObj.field, fieldValidateObj)
-      }
-    })
-
-    /**
-     *  when we have an error for onSubmit in the state, we want
-     *  to clear the error as soon as the user enters a valid value in the field
-     */
-    const submitErrKey = getErrorMapKey('submit')
-
-    if (
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      this.state.meta.errorMap?.[submitErrKey] &&
-      cause !== 'submit' &&
-      !hasErrored
-    ) {
-      this.setMeta((prev) => ({
-        ...prev,
-        errorMap: {
-          ...prev.errorMap,
-          [submitErrKey]: undefined,
-        },
-        errorSourceMap: {
-          ...prev.errorSourceMap,
-          [submitErrKey]: undefined,
-        },
-      }))
-    }
-
-    return { hasErrored }
+      throw new Error("STUB");
   }
 
   /**
@@ -1968,17 +1553,8 @@ export class FormGroupApi<
       : this.getRelatedFields()
     const relatedFieldValidates = relatedFields.reduce(
       (acc, field) => {
-        const fieldValidates = getAsyncValidatorArray(cause, {
-          ...field.options,
-          form: field.form,
-          validationLogic:
-            field.form.options.validationLogic || defaultValidationLogic,
-        })
-        fieldValidates.forEach((validate) => {
-          ;(validate as any).field = field
-        })
-        return acc.concat(fieldValidates as never)
-      },
+            throw new Error("STUB");
+        },
       [] as Array<
         AsyncValidator<any> & {
           field: AnyFieldApi
@@ -1997,16 +1573,16 @@ export class FormGroupApi<
     // This prevents unnecessary re-renders when there are no async validators
     // See: https://github.com/TanStack/form/issues/1130
     const hasAsyncValidators =
-      validates.some((v) => v.validate) ||
-      relatedFieldValidates.some((v) => v.validate)
+      validates.some((v) => { throw new Error("STUB"); }) ||
+      relatedFieldValidates.some((v) => { throw new Error("STUB"); })
 
     if (hasAsyncValidators) {
       if (!this.state.meta.isValidating) {
-        this.setMeta((prev) => ({ ...prev, isValidating: true }))
+        this.setMeta((prev) => { throw new Error("STUB"); })
       }
 
       for (const linkedField of relatedFields) {
-        linkedField.setMeta((prev) => ({ ...prev, isValidating: true }))
+        linkedField.setMeta((prev) => { throw new Error("STUB"); })
       }
     }
 
@@ -2015,108 +1591,7 @@ export class FormGroupApi<
       validateObj: AsyncValidator<any>,
       promises: Promise<ValidationError | undefined>[],
     ) => {
-      const errorMapKey = getErrorMapKey(validateObj.cause)
-      const fieldInfo = fieldOrGroup.getInfo()
-      const fieldValidatorMeta = fieldInfo.validationMetaMap[errorMapKey]
-
-      fieldValidatorMeta?.lastAbortController.abort()
-      const controller = new AbortController()
-
-      fieldInfo.validationMetaMap[errorMapKey] = {
-        lastAbortController: controller,
-      }
-
-      const isGroup = fieldOrGroup === this
-
-      promises.push(
-        new Promise<ValidationError | undefined>(async (resolve) => {
-          let rawError!: ValidationError | undefined
-          try {
-            rawError = await new Promise((rawResolve, rawReject) => {
-              if (fieldOrGroup.timeoutIds.validations[validateObj.cause]) {
-                clearTimeout(
-                  fieldOrGroup.timeoutIds.validations[validateObj.cause]!,
-                )
-              }
-
-              fieldOrGroup.timeoutIds.validations[validateObj.cause] =
-                setTimeout(async () => {
-                  if (controller.signal.aborted) return rawResolve(undefined)
-                  try {
-                    rawResolve(
-                      await this.runValidator({
-                        validate: validateObj.validate,
-                        value: {
-                          value: fieldOrGroup.store.state.value,
-                          signal: controller.signal,
-                          // See sync counterpart: produce `{ form, fields }`
-                          // from standard schemas attached to the group so we
-                          // can fan errors out to children.
-                          validationSource: isGroup ? 'form' : 'field',
-                          ...(fieldOrGroup instanceof FormGroupApi
-                            ? {
-                                groupApi: fieldOrGroup,
-                              }
-                            : { fieldApi: fieldOrGroup }),
-                        } as never,
-                        type: 'validateAsync',
-                      }),
-                    )
-                  } catch (e) {
-                    rawReject(e)
-                  }
-                }, validateObj.debounceMs)
-            })
-          } catch (e: unknown) {
-            rawError = e as ValidationError
-          }
-          if (controller.signal.aborted) return resolve(undefined)
-
-          let groupOwnRawError: ValidationError | undefined = rawError
-          let groupFieldErrors: Record<string, unknown> | undefined = undefined
-          if (isGroup && isGlobalGroupValidationError(rawError)) {
-            groupOwnRawError = rawError.group as ValidationError | undefined
-            groupFieldErrors = rawError.fields
-          }
-
-          const fieldLevelError = normalizeError(groupOwnRawError)
-          const formLevelError =
-            asyncFormValidationResults[
-              fieldOrGroup.name as keyof typeof asyncFormValidationResults
-            ]?.[errorMapKey]
-
-          const { newErrorValue, newSource } =
-            determineFieldLevelErrorSourceAndValue({
-              formLevelError,
-              fieldLevelError,
-            })
-
-          if (fieldOrGroup.getInfo().instance !== fieldOrGroup) {
-            return resolve(undefined)
-          }
-
-          fieldOrGroup.setMeta((prev) => {
-            return {
-              ...prev,
-              errorMap: {
-                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-                ...prev?.errorMap,
-                [errorMapKey]: newErrorValue,
-              },
-              errorSourceMap: {
-                ...prev.errorSourceMap,
-                [errorMapKey]: newSource,
-              },
-            }
-          })
-
-          if (isGroup) {
-            this.distributeFieldErrors(errorMapKey, groupFieldErrors)
-          }
-
-          resolve(newErrorValue)
-        }),
-      )
+        throw new Error("STUB");
     }
 
     // TODO: Dedupe this logic to reduce bundle size
@@ -2141,10 +1616,10 @@ export class FormGroupApi<
 
     // Only reset isValidating if we set it to true earlier
     if (hasAsyncValidators) {
-      this.setMeta((prev) => ({ ...prev, isValidating: false }))
+      this.setMeta((prev) => { throw new Error("STUB"); })
 
       for (const linkedField of relatedFields) {
-        linkedField.setMeta((prev) => ({ ...prev, isValidating: false }))
+        linkedField.setMeta((prev) => { throw new Error("STUB"); })
       }
     }
 
@@ -2156,31 +1631,7 @@ export class FormGroupApi<
    * This will ignore FORM level validators, use form.validate({ValidationCause}) for a complete validation
    */
   validateAllFields = async (cause: ValidationCause) => {
-    const fieldValidationPromises: Promise<ValidationError[]>[] = [] as any
-
-    batch(() => {
-      void Object.values(this.getRelatedFields()).forEach((fieldInstance) => {
-        // Validate the field
-        fieldValidationPromises.push(
-          // Remember, `validate` is either a sync operation or a promise
-          Promise.resolve().then(() =>
-            fieldInstance.validate(cause, {
-              skipFormValidation: true,
-              skipGroupValidation: true,
-            }),
-          ),
-        )
-
-        // If any fields are not touched
-        if (!fieldInstance.store.state.meta.isTouched) {
-          // Mark them as touched
-          fieldInstance.setMeta((prev) => ({ ...prev, isTouched: true }))
-        }
-      })
-    })
-
-    const fieldErrorMapMap = await Promise.all(fieldValidationPromises)
-    return fieldErrorMapMap.flat()
+      throw new Error("STUB");
   }
 
   validateArrayFieldsStartingFrom = <
@@ -2190,53 +1641,53 @@ export class FormGroupApi<
     index: number,
     cause: ValidationCause,
   ) => {
-    return this.form.validateArrayFieldsStartingFrom(field, index, cause)
+      throw new Error("STUB");
   }
 
   validateField = <TField extends DeepKeysOfType<TParentData, any>>(
     field: TField,
     cause: ValidationCause,
   ) => {
-    return this.form.validateField(field, cause)
+      throw new Error("STUB");
   }
 
   getFieldValue = <TField extends DeepKeysOfType<TParentData, any>>(
     field: TField,
   ) => {
-    return this.form.getFieldValue(field)
+      throw new Error("STUB");
   }
 
   getFieldMeta = <TField extends DeepKeysOfType<TParentData, any>>(
     field: TField,
   ) => {
-    return this.form.getFieldMeta(field)
+      throw new Error("STUB");
   }
 
   setFieldMeta = <TField extends DeepKeysOfType<TParentData, any>>(
     field: TField,
     updater: Updater<AnyFieldLikeMetaBase>,
   ) => {
-    return this.form.setFieldMeta(field, updater)
+      throw new Error("STUB");
   }
 
   setFieldValue = <TField extends DeepKeysOfType<TParentData, any>>(
     field: TField,
     value: any,
   ) => {
-    return this.form.setFieldValue(field, value)
+      throw new Error("STUB");
   }
 
   deleteField = <TField extends DeepKeysOfType<TParentData, any>>(
     field: TField,
   ) => {
-    return this.form.deleteField(field)
+      throw new Error("STUB");
   }
 
   pushFieldValue = <TField extends DeepKeysOfType<TParentData, any[]>>(
     field: TField,
     value: any,
   ) => {
-    return this.form.pushFieldValue(field, value)
+      throw new Error("STUB");
   }
 
   insertFieldValue = <TField extends DeepKeysOfType<TParentData, any[]>>(
@@ -2244,7 +1695,7 @@ export class FormGroupApi<
     index: number,
     value: any,
   ) => {
-    return this.form.insertFieldValue(field, index, value)
+      throw new Error("STUB");
   }
 
   replaceFieldValue = <TField extends DeepKeysOfType<TParentData, any[]>>(
@@ -2252,7 +1703,7 @@ export class FormGroupApi<
     index: number,
     value: any,
   ) => {
-    return this.form.replaceFieldValue(field, index, value)
+      throw new Error("STUB");
   }
 
   swapFieldValues = <TField extends DeepKeysOfType<TParentData, any[]>>(
@@ -2260,7 +1711,7 @@ export class FormGroupApi<
     index1: number,
     index2: number,
   ) => {
-    return this.form.swapFieldValues(field, index1, index2)
+      throw new Error("STUB");
   }
 
   moveFieldValues = <TField extends DeepKeysOfType<TParentData, any[]>>(
@@ -2268,32 +1719,30 @@ export class FormGroupApi<
     fromIndex: number,
     toIndex: number,
   ) => {
-    return this.form.moveFieldValues(field, fromIndex, toIndex)
+      throw new Error("STUB");
   }
 
   clearFieldValues = <TField extends DeepKeysOfType<TParentData, any[]>>(
     field: TField,
   ) => {
-    return this.form.clearFieldValues(field)
+      throw new Error("STUB");
   }
 
   resetField = <TField extends DeepKeysOfType<TParentData, any>>(
     field: TField,
   ) => {
-    return this.form.resetField(field)
+      throw new Error("STUB");
   }
 
   removeFieldValue = <TField extends DeepKeysOfType<TParentData, any[]>>(
     field: TField,
     index: number,
   ) => {
-    return this.form.removeFieldValue(field, index)
+      throw new Error("STUB");
   }
 
   areRelatedFieldsValid = () => {
-    return Object.values(this.getRelatedFields()).every(
-      (field) => field.state.meta.isValid,
-    )
+      throw new Error("STUB");
   }
 
   /**
@@ -2311,7 +1760,7 @@ export class FormGroupApi<
       ? { fieldsErrorMap: {} as never }
       : this.form.validateSync(cause, {
           dontUpdateFormErrorMap: true,
-          filterFieldNames: (fieldName) => isFieldInGroup(this.name, fieldName),
+          filterFieldNames: (fieldName) => { throw new Error("STUB"); },
         })
     const { hasErrored } = this.validateSync(
       cause,
@@ -2331,7 +1780,7 @@ export class FormGroupApi<
       ? Promise.resolve({})
       : this.form.validateAsync(cause, {
           dontUpdateFormErrorMap: true,
-          filterFieldNames: (fieldName) => isFieldInGroup(this.name, fieldName),
+          filterFieldNames: (fieldName) => { throw new Error("STUB"); },
         })
     return this.validateAsync(cause, formValidationResultPromise, {
       skipRelatedFieldValidation: opts?.skipRelatedFieldValidation,
@@ -2342,53 +1791,14 @@ export class FormGroupApi<
    * @private
    */
   triggerOnChangeListener = () => {
-    const formDebounceMs = this.form.options.listeners?.onChangeGroupDebounceMs
-    if (formDebounceMs && formDebounceMs > 0) {
-      if (this.timeoutIds.formListeners.change) {
-        clearTimeout(this.timeoutIds.formListeners.change)
-      }
-
-      this.timeoutIds.formListeners.change = setTimeout(() => {
-        this.form.options.listeners?.onChangeGroup?.({
-          formApi: this.form,
-          groupApi: this,
-        })
-      }, formDebounceMs)
-    } else {
-      this.form.options.listeners?.onChangeGroup?.({
-        formApi: this.form,
-        groupApi: this,
-      })
-    }
-
-    const fieldDebounceMs = this.options.listeners?.onChangeDebounceMs
-    if (fieldDebounceMs && fieldDebounceMs > 0) {
-      if (this.timeoutIds.listeners.change) {
-        clearTimeout(this.timeoutIds.listeners.change)
-      }
-
-      this.timeoutIds.listeners.change = setTimeout(() => {
-        this.options.listeners?.onChange?.({
-          value: this.state.value,
-          groupApi: this,
-        })
-      }, fieldDebounceMs)
-    } else {
-      this.options.listeners?.onChange?.({
-        value: this.state.value,
-        groupApi: this,
-      })
-    }
+      throw new Error("STUB");
   }
 
   /**
    * @private
    */
   triggerOnSubmitListener = () => {
-    this.options.listeners?.onSubmit?.({
-      value: this.state.value,
-      groupApi: this,
-    })
+      throw new Error("STUB");
   }
 
   // Needs to edgecase in the React adapter specifically to avoid type errors
@@ -2402,122 +1812,12 @@ export class FormGroupApi<
    * Handles the form submission, performs validation, and calls the appropriate onSubmit or onSubmitInvalid callbacks.
    */
   _handleSubmit = async (submitMeta?: TSubmitMeta): Promise<void> => {
-    this.setFormGroupState((old) => ({
-      ...old,
-      // Submission attempts mark the form as not submitted
-      isSubmitted: false,
-      // Count submission attempts
-      submissionAttempts: old.submissionAttempts + 1,
-      isSubmitSuccessful: false, // Reset isSubmitSuccessful at the start of submission
-    }))
-
-    batch(() => {
-      void Object.values(this.getRelatedFields()).forEach((field) => {
-        // If any fields are not touched
-        if (!field.state.meta.isTouched) {
-          // Mark them as touched
-          field.setMeta((prev) => ({ ...prev, isTouched: true }))
-        }
-      })
-    })
-
-    const submitMetaArg =
-      submitMeta ?? (this.options.onSubmitMeta as TSubmitMeta)
-
-    this.setFormGroupState((d) => ({ ...d, isSubmitting: true }))
-
-    const done = () => {
-      this.setFormGroupState((prev) => ({ ...prev, isSubmitting: false }))
-    }
-
-    await this.validateAllFields('submit')
-
-    // Fields are invalid, do not submit
-    if (!this.areRelatedFieldsValid()) {
-      done()
-
-      this.options.onGroupSubmitInvalid?.({
-        value: this.state.value,
-        groupApi: this,
-        meta: submitMetaArg,
-      })
-
-      return
-    }
-
-    await this.validate('submit', {
-      // This has already happened in the previous step
-      skipRelatedFieldValidation: true,
-    })
-
-    // Group (or related fields) is invalid, do not submit. Mirrors
-    // `FormApi._handleSubmit`'s check against the derived `state.isValid`,
-    // which includes both the group's own validators and any form-level
-    // errors propagated onto related fields by `validate('submit')` above
-    // (e.g. `onDynamic` errors via `revalidateLogic`).
-
-    if (!this.areRelatedFieldsValid() || !this.state.meta.isValid) {
-      done()
-
-      this.options.onGroupSubmitInvalid?.({
-        value: this.state.value,
-        groupApi: this,
-        meta: submitMetaArg,
-      })
-
-      return
-    }
-
-    batch(() => {
-      void Object.values(this.getRelatedFields()).forEach((field) => {
-        field.options.listeners?.onGroupSubmit?.({
-          value: field.state.value,
-          fieldApi: field,
-        })
-      })
-    })
-
-    this.options.listeners?.onSubmit?.({
-      groupApi: this,
-      value: this.state.value,
-    })
-
-    try {
-      // Run the submit code
-      await this.options.onGroupSubmit?.({
-        value: this.state.value,
-        groupApi: this,
-        meta: submitMetaArg,
-      })
-
-      batch(() => {
-        this.setFormGroupState((prev) => ({
-          ...prev,
-          isSubmitted: true,
-          isSubmitSuccessful: true, // Set isSubmitSuccessful to true on successful submission
-        }))
-
-        done()
-      })
-    } catch (err) {
-      this.setFormGroupState((prev) => ({
-        ...prev,
-        isSubmitSuccessful: false, // Ensure isSubmitSuccessful is false if an error occurs
-      }))
-
-      done()
-
-      throw err
-    }
+      throw new Error("STUB");
   }
 }
 
 function normalizeError(rawError?: ValidationError) {
-  if (rawError) {
-    return rawError
-  }
-
-  return undefined
+    throw new Error("STUB");
 }
 
 /**
@@ -2530,7 +1830,7 @@ function normalizeError(rawError?: ValidationError) {
 function isGlobalGroupValidationError(
   error: unknown,
 ): error is { group?: unknown; fields?: Record<string, unknown> } {
-  return !!error && typeof error === 'object' && 'fields' in error
+    throw new Error("STUB");
 }
 
 /**
@@ -2552,19 +1852,5 @@ function remapStandardSchemaResultForGroup(result: unknown): unknown {
 }
 
 function getErrorMapKey(cause: ValidationCause) {
-  switch (cause) {
-    case 'submit':
-      return 'onSubmit'
-    case 'blur':
-      return 'onBlur'
-    case 'mount':
-      return 'onMount'
-    case 'server':
-      return 'onServer'
-    case 'dynamic':
-      return 'onDynamic'
-    case 'change':
-    default:
-      return 'onChange'
-  }
+    throw new Error("STUB");
 }

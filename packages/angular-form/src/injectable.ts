@@ -32,10 +32,10 @@ export class TanStackFieldInjectable<T> {
   >(null as never)
 
   get api() {
-    return this._api()
+      throw new Error("STUB");
   }
 }
 
 export function injectField<T>(): TanStackFieldInjectable<T> {
-  return inject(TanStackFieldInjectable<T>)
+    throw new Error("STUB");
 }

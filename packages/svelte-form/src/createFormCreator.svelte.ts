@@ -54,40 +54,7 @@ type UnwrapDefaultOrAny<DefaultT, T> = [DefaultT] extends [T]
 
 export function createFormCreatorContexts() {
   function useFieldContext<TData>() {
-    const field = getContext(fieldContextKey) as AnyFieldApi
-
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (!field) {
-      throw new Error(
-        '`fieldContext` only works when within a `fieldComponent` passed to `createFormCreator`',
-      )
-    }
-
-    return field as FieldApi<
-      any,
-      string,
-      TData,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any
-    >
+      throw new Error("STUB");
   }
 
   function useFormContext() {
@@ -230,41 +197,7 @@ export function createFormCreator<
     TComponents,
     TFormComponents
   > {
-    const form = createForm(props)
-
-    const AppForm = ((internal, props) => {
-      return AppFormSvelte(internal, { ...props, form })
-    }) as Component<{ children: Snippet }>
-
-    const AppField = ((internal, { children, ...fieldProps }) =>
-      AppFieldSvelte(internal, {
-        fieldProps,
-        form,
-        fieldComponents,
-        children,
-      } as never)) as FieldComponent<
-      TFormData,
-      TOnMount,
-      TOnChange,
-      TOnChangeAsync,
-      TOnBlur,
-      TOnBlurAsync,
-      TOnSubmit,
-      TOnSubmitAsync,
-      TOnDynamic,
-      TOnDynamicAsync,
-      TOnServer,
-      TSubmitMeta,
-      TComponents
-    >
-
-    const extendedForm = Object.assign(form, {
-      AppField,
-      AppForm,
-      ...formComponents,
-    })
-
-    return extendedForm
+      throw new Error("STUB");
   }
 
   function getFormType<

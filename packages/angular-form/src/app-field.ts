@@ -77,9 +77,6 @@ export class TanStackAppField<
   base = inject(TanStackFieldInjectable)
 
   constructor() {
-    super()
-    effect(() => {
-      this.base._api.set(this.api)
-    })
+      throw new Error("STUB");
   }
 }

@@ -193,27 +193,16 @@ export function createFieldGroup<
     TFormComponents
   > = api as never
 
-  extendedApi.AppForm = (appFormProps) => <form.AppForm {...appFormProps} />
-  extendedApi.AppField = (props) => (
-    <form.AppField {...(api.getFormFieldOptions(props) as any)} />
-  )
-  extendedApi.Field = (props) => (
-    <form.Field {...(api.getFormFieldOptions(props) as any)} />
-  )
+  extendedApi.AppForm = (appFormProps) => { throw new Error("STUB"); }
+  extendedApi.AppField = (props) => { throw new Error("STUB"); }
+  extendedApi.Field = (props) => { throw new Error("STUB"); }
   extendedApi.Subscribe = (props) => {
-    const data = useStore(api.store, props.selector)
-
-    return functionalUpdate(props.children, data()) as Element
+      throw new Error("STUB");
   }
 
   let mounted = false
   onMount(() => {
-    const cleanupFn = api.mount()
-    mounted = true
-    onCleanup(() => {
-      cleanupFn()
-      mounted = false
-    })
+      throw new Error("STUB");
   })
 
   return Object.assign(extendedApi, {

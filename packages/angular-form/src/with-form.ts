@@ -46,8 +46,6 @@ export class TanStackWithForm<
   base = inject(TanStackWithFormInjectable)
 
   constructor() {
-    effect(() => {
-      this.base._form.set(this.form())
-    })
+      throw new Error("STUB");
   }
 }

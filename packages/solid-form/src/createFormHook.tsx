@@ -73,42 +73,7 @@ export function createFormHookContexts() {
   )
 
   function useFieldContext<TData>() {
-    const field = useContext(fieldContext)
-
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (!field) {
-      throw new Error(
-        '`fieldContext` only works when within a `fieldComponent` passed to `createFormHook`',
-      )
-    }
-
-    return field as Accessor<
-      FieldApi<
-        any,
-        string,
-        TData,
-        any,
-        any,
-        any,
-        any,
-        any,
-        any,
-        any,
-        any,
-        any,
-        any,
-        any,
-        any,
-        any,
-        any,
-        any,
-        any,
-        any,
-        any,
-        any,
-        any
-      >
-    >
+      throw new Error("STUB");
   }
 
   // We should never hit the `null` case here
@@ -350,30 +315,11 @@ export function createFormHook<
     const form = createForm(props)
 
     const AppForm = ((formProps) => {
-      return (
-        <opts.formContext.Provider value={form}>
-          {formProps.children}
-        </opts.formContext.Provider>
-      )
+        throw new Error("STUB");
     }) as Component<ParentProps>
 
     const AppField = ((_props) => {
-      const [childProps, fieldProps] = splitProps(_props, ['children'])
-      return (
-        <form.Field {...fieldProps}>
-          {(field) => (
-            <opts.fieldContext.Provider value={field}>
-              {createComponent(
-                () =>
-                  childProps.children(
-                    Object.assign(field, opts.fieldComponents),
-                  ),
-                {},
-              )}
-            </opts.fieldContext.Provider>
-          )}
-        </form.Field>
-      )
+        throw new Error("STUB");
     }) as FieldComponent<
       TFormData,
       TOnMount,
@@ -470,10 +416,7 @@ export function createFormHook<
     UnwrapOrAny<TRenderProps>
   >['render'] {
     return (innerProps) =>
-      createComponent(
-        render as Component<any>,
-        mergeProps(props ?? {}, innerProps),
-      )
+      { throw new Error("STUB"); }
   }
 
   function withFieldGroup<
@@ -551,17 +494,7 @@ export function createFormHook<
     >,
   ) => JSXElement {
     return function Render(innerProps) {
-      const fieldGroupProps = {
-        form: innerProps.form,
-        fields: innerProps.fields,
-        defaultValues,
-        formComponents: opts.formComponents,
-      }
-      const fieldGroupApi = createFieldGroup(() => fieldGroupProps)
-      return createComponent(
-        render as Component<any>,
-        mergeProps(props ?? {}, innerProps, { group: fieldGroupApi as any }),
-      )
+        throw new Error("STUB");
     }
   }
 

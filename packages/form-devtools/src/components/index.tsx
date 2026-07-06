@@ -10,11 +10,5 @@ interface DevtoolsProps {
 }
 
 export default function Devtools(props: DevtoolsProps) {
-  return (
-    <ThemeContextProvider theme={props.theme}>
-      <FormEventClientProvider>
-        <Shell />
-      </FormEventClientProvider>
-    </ThemeContextProvider>
-  )
+    throw new Error("STUB");
 }

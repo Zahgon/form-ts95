@@ -67,5 +67,5 @@ export function injectStore<
     >,
   ) => TSelected,
 ) {
-  return injectAngularStore(form.store, selector)
+    throw new Error("STUB");
 }

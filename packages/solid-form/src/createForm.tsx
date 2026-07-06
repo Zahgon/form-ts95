@@ -232,11 +232,11 @@ export function createForm<
       TSubmitMeta
     > = api as never
 
-  extendedApi.Field = (props) => <Field {...props} form={api} />
-  extendedApi.FormGroup = (props) => <FormGroup {...props} form={api} />
-  extendedApi.useStore = (selector) => useStore(api.store, selector)
+  extendedApi.Field = (props) => { throw new Error("STUB"); }
+  extendedApi.FormGroup = (props) => { throw new Error("STUB"); }
+  extendedApi.useStore = (selector) => { throw new Error("STUB"); }
   extendedApi.Subscribe = (props) =>
-    functionalUpdate(props.children, useStore(api.store, props.selector))
+    { throw new Error("STUB"); }
 
   onMount(api.mount)
 
@@ -244,7 +244,7 @@ export function createForm<
    * formApi.update should not have any side effects. Think of it like a `useRef`
    * that we need to keep updated every render with the most up-to-date information.
    */
-  createComputed(() => api.update(opts?.()))
+  createComputed(() => { throw new Error("STUB"); })
 
   return extendedApi
 }

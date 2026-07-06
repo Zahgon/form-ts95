@@ -10,45 +10,5 @@ type ActionButtonsProps = {
 }
 
 export function ActionButtons(props: ActionButtonsProps) {
-  const styles = useStyles()
-
-  return (
-    <div class={styles().actionsRow}>
-      <button
-        class={styles().actionButton}
-        onMouseDown={() => {
-          formEventClient.emit('request-form-state', {
-            id: props.selectedInstance()?.id as string,
-          })
-        }}
-      >
-        <span class={styles().actionDotGreen} />
-        Flush
-      </button>
-
-      <button
-        class={styles().actionButton}
-        onMouseDown={() => {
-          formEventClient.emit('request-form-reset', {
-            id: props.selectedInstance()?.id as string,
-          })
-        }}
-      >
-        <span class={styles().actionDotRed} />
-        Reset
-      </button>
-
-      <button
-        class={styles().actionButton}
-        onMouseDown={() => {
-          formEventClient.emit('request-form-force-submit', {
-            id: props.selectedInstance()?.id as string,
-          })
-        }}
-      >
-        <span class={styles().actionDotYellow} />
-        Submit (-f)
-      </button>
-    </div>
-  )
+    throw new Error("STUB");
 }

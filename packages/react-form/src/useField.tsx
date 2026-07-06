@@ -164,15 +164,10 @@ export function useField<
 ) {
   // Keep a snapshot of options so that React Compiler doesn't
   // wrongly optimize fieldApi.
-  const [prevOptions, setPrevOptions] = useState(() => ({
-    form: opts.form,
-    name: opts.name,
-  }))
+  const [prevOptions, setPrevOptions] = useState(() => { throw new Error("STUB"); })
 
   const [fieldApi, setFieldApi] = useState(() => {
-    return new FieldApi({
-      ...opts,
-    })
+      throw new Error("STUB");
   })
 
   // We only want to
@@ -193,88 +188,39 @@ export function useField<
   const reactiveStateValue = useStore(
     fieldApi.store,
     (opts.mode === 'array'
-      ? (state) => state.meta._arrayVersion || 0
-      : (state) => state.value) as (
+      ? (state) => { throw new Error("STUB"); }
+      : (state) => { throw new Error("STUB"); }) as (
       state: typeof fieldApi.state,
     ) => TData | number,
   )
   const reactiveMetaIsTouched = useStore(
     fieldApi.store,
-    (state) => state.meta.isTouched,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaIsBlurred = useStore(
     fieldApi.store,
-    (state) => state.meta.isBlurred,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaIsDirty = useStore(
     fieldApi.store,
-    (state) => state.meta.isDirty,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaErrorMap = useStore(
     fieldApi.store,
-    (state) => state.meta.errorMap,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaErrorSourceMap = useStore(
     fieldApi.store,
-    (state) => state.meta.errorSourceMap,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaIsValidating = useStore(
     fieldApi.store,
-    (state) => state.meta.isValidating,
+    (state) => { throw new Error("STUB"); },
   )
 
   // This makes me sad, but if I understand correctly, this is what we have to do for reactivity to work properly with React compiler.
   const extendedFieldApi = useMemo(() => {
-    const reactiveFieldApi = {
-      ...fieldApi,
-      get state() {
-        return {
-          // For array mode, reactiveStateValue is the length (for reactivity tracking),
-          // so we need to get the actual value from fieldApi
-          value:
-            opts.mode === 'array' ? fieldApi.state.value : reactiveStateValue,
-          get meta() {
-            return {
-              ...fieldApi.state.meta,
-              isTouched: reactiveMetaIsTouched,
-              isBlurred: reactiveMetaIsBlurred,
-              isDirty: reactiveMetaIsDirty,
-              errorMap: reactiveMetaErrorMap,
-              errorSourceMap: reactiveMetaErrorSourceMap,
-              isValidating: reactiveMetaIsValidating,
-            } satisfies AnyFieldMeta
-          },
-        } satisfies AnyFieldApi['state']
-      },
-    }
-
-    const extendedApi: FieldApi<
-      TParentData,
-      TName,
-      TData,
-      TOnMount,
-      TOnChange,
-      TOnChangeAsync,
-      TOnBlur,
-      TOnBlurAsync,
-      TOnSubmit,
-      TOnSubmitAsync,
-      TOnDynamic,
-      TOnDynamicAsync,
-      TFormOnMount,
-      TFormOnChange,
-      TFormOnChangeAsync,
-      TFormOnBlur,
-      TFormOnBlurAsync,
-      TFormOnSubmit,
-      TFormOnSubmitAsync,
-      TFormOnDynamic,
-      TFormOnDynamicAsync,
-      TFormOnServer,
-      TPatentSubmitMeta
-    > = reactiveFieldApi as never
-
-    return extendedApi
+      throw new Error("STUB");
   }, [
     fieldApi,
     opts.mode,
@@ -294,7 +240,7 @@ export function useField<
    * that we need to keep updated every render with the most up-to-date information.
    */
   useIsomorphicLayoutEffect(() => {
-    fieldApi.update(opts)
+      throw new Error("STUB");
   })
 
   return extendedFieldApi
@@ -696,13 +642,7 @@ export const Field = (<
   TFormOnServer,
   TPatentSubmitMeta
 >): ReturnType<FunctionComponent> => {
-  const fieldApi = useField(fieldOptions as any)
-
-  const jsxToDisplay = useMemo(
-    () => functionalUpdate(children, fieldApi as any),
-    [children, fieldApi],
-  )
-  return (<>{jsxToDisplay}</>) as never
+    throw new Error("STUB");
 }) satisfies FunctionComponent<
   FieldComponentProps<
     any,

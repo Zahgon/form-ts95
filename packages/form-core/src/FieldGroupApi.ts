@@ -156,24 +156,7 @@ export class FieldGroupApi<
   getFormFieldName = <TField extends DeepKeys<TFieldGroupData>>(
     subfield: TField,
   ): DeepKeys<TFormData> => {
-    if (typeof this.fieldsMap === 'string') {
-      return concatenatePaths(this.fieldsMap, subfield)
-    }
-
-    const firstAccessor = makePathArray(subfield)[0]
-    if (typeof firstAccessor !== 'string') {
-      // top-level arrays cannot be mapped
-      return ''
-    }
-
-    const restOfPath = subfield.slice(firstAccessor.length)
-    const formMappedPath =
-      // TFields is either a string or this. See guard above.
-      (this.fieldsMap as FieldsMap<TFormData, TFieldGroupData>)[
-        firstAccessor as keyof TFieldGroupData
-      ]
-
-    return concatenatePaths(formMappedPath, restOfPath)
+      throw new Error("STUB");
   }
 
   /**
@@ -198,33 +181,7 @@ export class FieldGroupApi<
   >(
     props: TOptions,
   ): TOptions => {
-    const newProps = { ...props }
-    const validators = newProps.validators
-
-    newProps.name = this.getFormFieldName(props.name)
-
-    if (
-      validators &&
-      (validators.onChangeListenTo || validators.onBlurListenTo)
-    ) {
-      const newValidators = { ...validators }
-
-      const remapListenTo = (listenTo: DeepKeys<any>[] | undefined) => {
-        if (!listenTo) return undefined
-        return listenTo.map((localFieldName) =>
-          this.getFormFieldName(localFieldName),
-        )
-      }
-
-      newValidators.onChangeListenTo = remapListenTo(
-        validators.onChangeListenTo,
-      )
-      newValidators.onBlurListenTo = remapListenTo(validators.onBlurListenTo)
-
-      newProps.validators = newValidators
-    }
-
-    return newProps
+      throw new Error("STUB");
   }
 
   store: ReadonlyStore<FieldGroupState<TFieldGroupData>>
@@ -254,49 +211,7 @@ export class FieldGroupApi<
       TSubmitMeta
     >,
   ) {
-    if (opts.form instanceof FieldGroupApi) {
-      const group = opts.form
-      this.form = group.form as never
-
-      // the DeepKey is already namespaced, so we need to ensure that we reference
-      // the form and not the group
-      if (typeof opts.fields === 'string') {
-        this.fieldsMap = group.getFormFieldName(opts.fields) as TFields
-      } else {
-        // TypeScript has a tough time with generics being a union for some reason
-        const fields = {
-          ...(opts.fields as FieldsMap<TFormData, TFieldGroupData>),
-        }
-        for (const key in fields) {
-          fields[key] = group.getFormFieldName(fields[key]) as never
-        }
-        this.fieldsMap = fields as never
-      }
-    } else {
-      this.form = opts.form
-      this.fieldsMap = opts.fields
-    }
-
-    this.store = createStore(() => {
-      const currFormStore = this.form.store.get()
-      let values: TFieldGroupData
-      if (typeof this.fieldsMap === 'string') {
-        // all values live at that name, so we can directly fetch it
-        values = getBy(currFormStore.values, this.fieldsMap)
-      } else {
-        // we need to fetch the values from all places where they were mapped from
-        values = {} as never
-        const fields: Record<keyof TFieldGroupData, string> = this
-          .fieldsMap as never
-        for (const key in fields) {
-          values[key] = getBy(currFormStore.values, fields[key])
-        }
-      }
-
-      return {
-        values,
-      }
-    })
+      throw new Error("STUB");
   }
 
   /**
@@ -305,7 +220,9 @@ export class FieldGroupApi<
    * TODO: Remove
    */
   mount = () => {
-    return () => {}
+    return () => {
+        throw new Error("STUB");
+    }
   }
 
   /**
@@ -318,11 +235,7 @@ export class FieldGroupApi<
     index: number,
     cause: ValidationCause,
   ) => {
-    return this.form.validateArrayFieldsStartingFrom(
-      this.getFormFieldName(field),
-      index,
-      cause,
-    )
+      throw new Error("STUB");
   }
 
   /**
@@ -332,7 +245,7 @@ export class FieldGroupApi<
     field: TField,
     cause: ValidationCause,
   ) => {
-    return this.form.validateField(this.getFormFieldName(field), cause)
+      throw new Error("STUB");
   }
 
   /**
@@ -351,17 +264,14 @@ export class FieldGroupApi<
   getFieldValue = <TField extends DeepKeys<TFieldGroupData>>(
     field: TField,
   ): DeepValue<TFieldGroupData, TField> => {
-    return this.form.getFieldValue(this.getFormFieldName(field)) as DeepValue<
-      TFieldGroupData,
-      TField
-    >
+      throw new Error("STUB");
   }
 
   /**
    * Gets the metadata of the specified field.
    */
   getFieldMeta = <TField extends DeepKeys<TFieldGroupData>>(field: TField) => {
-    return this.form.getFieldMeta(this.getFormFieldName(field))
+      throw new Error("STUB");
   }
 
   /**
@@ -371,7 +281,7 @@ export class FieldGroupApi<
     field: TField,
     updater: Updater<AnyFieldLikeMetaBase>,
   ) => {
-    return this.form.setFieldMeta(this.getFormFieldName(field), updater)
+      throw new Error("STUB");
   }
 
   /**
@@ -382,18 +292,14 @@ export class FieldGroupApi<
     updater: Updater<DeepValue<TFieldGroupData, TField>>,
     opts?: UpdateMetaOptions,
   ) => {
-    return this.form.setFieldValue(
-      this.getFormFieldName(field) as never,
-      updater as never,
-      opts,
-    )
+      throw new Error("STUB");
   }
 
   /**
    * Delete a field and its subfields.
    */
   deleteField = <TField extends DeepKeys<TFieldGroupData>>(field: TField) => {
-    return this.form.deleteField(this.getFormFieldName(field))
+      throw new Error("STUB");
   }
 
   /**
@@ -406,12 +312,7 @@ export class FieldGroupApi<
       : never,
     opts?: UpdateMetaOptions,
   ) => {
-    return this.form.pushFieldValue(
-      this.getFormFieldName(field),
-      // since unknown doesn't extend an array, it types `value` as never.
-      value as never,
-      opts,
-    )
+      throw new Error("STUB");
   }
 
   /**
@@ -427,13 +328,7 @@ export class FieldGroupApi<
       : never,
     opts?: UpdateMetaOptions,
   ) => {
-    return this.form.insertFieldValue(
-      this.getFormFieldName(field),
-      index,
-      // since unknown doesn't extend an array, it types `value` as never.
-      value as never,
-      opts,
-    )
+      throw new Error("STUB");
   }
 
   /**
@@ -449,13 +344,7 @@ export class FieldGroupApi<
       : never,
     opts?: UpdateMetaOptions,
   ) => {
-    return this.form.replaceFieldValue(
-      this.getFormFieldName(field),
-      index,
-      // since unknown doesn't extend an array, it types `value` as never.
-      value as never,
-      opts,
-    )
+      throw new Error("STUB");
   }
 
   /**
@@ -468,7 +357,7 @@ export class FieldGroupApi<
     index: number,
     opts?: UpdateMetaOptions,
   ) => {
-    return this.form.removeFieldValue(this.getFormFieldName(field), index, opts)
+      throw new Error("STUB");
   }
 
   /**
@@ -480,12 +369,7 @@ export class FieldGroupApi<
     index2: number,
     opts?: UpdateMetaOptions,
   ) => {
-    return this.form.swapFieldValues(
-      this.getFormFieldName(field),
-      index1,
-      index2,
-      opts,
-    )
+      throw new Error("STUB");
   }
 
   /**
@@ -497,28 +381,23 @@ export class FieldGroupApi<
     index2: number,
     opts?: UpdateMetaOptions,
   ) => {
-    return this.form.moveFieldValues(
-      this.getFormFieldName(field),
-      index1,
-      index2,
-      opts,
-    )
+      throw new Error("STUB");
   }
 
   clearFieldValues = <TField extends DeepKeysOfType<TFieldGroupData, any[]>>(
     field: TField,
     opts?: UpdateMetaOptions,
   ) => {
-    return this.form.clearFieldValues(this.getFormFieldName(field), opts)
+      throw new Error("STUB");
   }
 
   /**
    * Resets the field value and meta to default state
    */
   resetField = <TField extends DeepKeys<TFieldGroupData>>(field: TField) => {
-    return this.form.resetField(this.getFormFieldName(field))
+      throw new Error("STUB");
   }
 
   validateAllFields = (cause: ValidationCause) =>
-    this.form.validateAllFields(cause)
+    { throw new Error("STUB"); }
 }

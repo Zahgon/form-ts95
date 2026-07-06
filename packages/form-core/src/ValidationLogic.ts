@@ -77,58 +77,7 @@ export const revalidateLogic =
     modeAfterSubmission = 'change',
   }: RevalidateLogicProps = {}): ValidationLogicFn =>
   (props) => {
-    const validatorNames = Object.keys(props.validators ?? {})
-    if (validatorNames.length === 0) {
-      // No validators is a valid case, just return
-      return props.runValidation({
-        validators: [],
-        form: props.form,
-      })
-    }
-
-    const dynamicValidator = {
-      fn: props.event.async
-        ? props.validators!['onDynamicAsync']
-        : props.validators!['onDynamic'],
-      cause: 'dynamic',
-    } as const
-
-    const validatorsToAdd = [] as ValidationLogicValidatorsFn[]
-
-    // When validating a `FormGroupApi`'s own validators, gate on the group's
-    // submission attempts so a group's `onDynamic` validator only flips into
-    // `modeAfterSubmission` after that group itself has been submitted.
-    // Otherwise (form-level validators), gate on the parent form.
-    const submissionAttempts = props.group
-      ? props.group.state.meta.submissionAttempts
-      : props.form.state.submissionAttempts
-
-    const modeToWatch = submissionAttempts === 0 ? mode : modeAfterSubmission
-
-    if ([modeToWatch, 'submit'].includes(props.event.type)) {
-      validatorsToAdd.push(dynamicValidator)
-    }
-
-    let defaultValidators = [] as ValidationLogicValidatorsFn[]
-
-    defaultValidationLogic({
-      ...props,
-      runValidation: (vProps) => {
-        defaultValidators = vProps.validators as ValidationLogicValidatorsFn[]
-      },
-    })
-
-    if (validatorsToAdd.length === 0) {
-      return props.runValidation({
-        validators: defaultValidators,
-        form: props.form,
-      })
-    }
-
-    return props.runValidation({
-      validators: [...defaultValidators, ...validatorsToAdd],
-      form: props.form,
-    })
+      throw new Error("STUB");
   }
 
 export const defaultValidationLogic: ValidationLogicFn = (props) => {
@@ -164,7 +113,7 @@ export const defaultValidationLogic: ValidationLogicFn = (props) => {
   // Allows us to clear onServer errors
   const onServerValidator = isAsync
     ? undefined
-    : ({ fn: () => undefined, cause: 'server' } as const)
+    : ({ fn: () => { throw new Error("STUB"); }, cause: 'server' } as const)
 
   switch (props.event.type) {
     case 'mount': {

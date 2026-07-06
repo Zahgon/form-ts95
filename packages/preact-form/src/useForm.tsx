@@ -160,9 +160,7 @@ function LocalSubscribe({
   form: AnyFormApi
   selector: (state: AnyFormState) => AnyFormState
 }>): ReturnType<FunctionComponent> {
-  const data = useStore(form.store, selector)
-
-  return <>{functionalUpdate(children, data)}</>
+    throw new Error("STUB");
 }
 
 /**
@@ -203,20 +201,7 @@ export function useForm<
   const [prevFormId, setPrevFormId] = useState<string>(opts?.formId as never)
 
   const [formApi, setFormApi] = useState(() => {
-    return new FormApi<
-      TFormData,
-      TOnMount,
-      TOnChange,
-      TOnChangeAsync,
-      TOnBlur,
-      TOnBlurAsync,
-      TOnSubmit,
-      TOnSubmitAsync,
-      TOnDynamic,
-      TOnDynamicAsync,
-      TOnServer,
-      TSubmitMeta
-    >({ ...opts, formId: opts?.formId ?? fallbackFormId })
+      throw new Error("STUB");
   })
 
   if (prevFormId !== opts?.formId) {
@@ -226,52 +211,7 @@ export function useForm<
   }
 
   const extendedFormApi = useMemo(() => {
-    const extendedApi: PreactFormExtendedApi<
-      TFormData,
-      TOnMount,
-      TOnChange,
-      TOnChangeAsync,
-      TOnBlur,
-      TOnBlurAsync,
-      TOnSubmit,
-      TOnSubmitAsync,
-      TOnDynamic,
-      TOnDynamicAsync,
-      TOnServer,
-      TSubmitMeta
-    > = {
-      ...formApi,
-      handleSubmit: ((...props: never[]) => {
-        return formApi._handleSubmit(...props)
-      }) as typeof formApi.handleSubmit,
-      // We must add all `get`ters from `core`'s `FormApi` here, as otherwise the spread operator won't catch those
-      get formId(): string {
-        return formApi._formId
-      },
-      get state() {
-        return formApi.store.state
-      },
-    } as never
-
-    extendedApi.Field = function APIField(props) {
-      return <Field {...props} form={formApi} />
-    }
-
-    extendedApi.FormGroup = function APIFormGroup(props) {
-      return <FormGroup {...props} form={formApi} />
-    }
-
-    extendedApi.Subscribe = function Subscribe(props: any) {
-      return (
-        <LocalSubscribe
-          form={formApi}
-          selector={props.selector}
-          children={props.children}
-        />
-      )
-    }
-
-    return extendedApi
+      throw new Error("STUB");
   }, [formApi])
 
   useIsomorphicLayoutEffect(formApi.mount, [])
@@ -281,19 +221,17 @@ export function useForm<
    * that we need to keep updated every render with the most up-to-date information.
    */
   useIsomorphicLayoutEffect(() => {
-    formApi.update(opts)
+      throw new Error("STUB");
   })
 
   const hasRan = useRef(false)
 
   useIsomorphicLayoutEffect(() => {
-    if (!hasRan.current) return
-    if (!opts?.transform) return
-    mergeAndUpdate(formApi, opts.transform as never)
+      throw new Error("STUB");
   }, [formApi, opts?.transform])
 
   useIsomorphicLayoutEffect(() => {
-    hasRan.current = true
+      throw new Error("STUB");
   })
 
   return extendedFormApi

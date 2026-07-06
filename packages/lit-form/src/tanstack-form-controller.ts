@@ -269,33 +269,16 @@ export class TanStackFormController<
       TSubmitMeta
     >,
   ) {
-    this.api = new FormApi<
-      TParentData,
-      TFormOnMount,
-      TFormOnChange,
-      TFormOnChangeAsync,
-      TFormOnBlur,
-      TFormOnBlurAsync,
-      TFormOnSubmit,
-      TFormOnSubmitAsync,
-      TFormOnDynamic,
-      TFormOnDynamicAsync,
-      TFormOnServer,
-      TSubmitMeta
-    >(config)
-
-    // `TanStackStoreSelector` registers itself as a controller on `host`
-    // and calls `requestUpdate` when its selected value changes. Subscribe
-    // to the form's main store and to `formGroupMetaDerived` so any change
-    // to per-group submission lifecycle / aggregated validity also
-    // triggers a host re-render.
-    new TanStackStoreSelector(host, () => this.api.store)
-    new TanStackStoreSelector(host, () => this.api.formGroupMetaDerived)
+      throw new Error("STUB");
   }
 
-  hostConnected() {}
+  hostConnected() {
+      throw new Error("STUB");
+  }
 
-  hostDisconnected() {}
+  hostDisconnected() {
+      throw new Error("STUB");
+  }
 
   field<
     TName extends DeepKeys<TParentData>,
@@ -568,12 +551,7 @@ class FieldDirective<
   #unmount?: () => void
 
   constructor(partInfo: PartInfo) {
-    super(partInfo)
-    if (partInfo.type !== PartType.CHILD) {
-      throw new Error(
-        'The `field` directive must be used in the `child` attribute',
-      )
-    }
+      throw new Error("STUB");
   }
 
   update(
@@ -595,15 +573,11 @@ class FieldDirective<
   }
 
   protected disconnected() {
-    super.disconnected()
-    this.#unmount?.()
+      throw new Error("STUB");
   }
 
   protected reconnected() {
-    super.reconnected()
-    if (this.#field) {
-      this.#unmount = this.#field.mount()
-    }
+      throw new Error("STUB");
   }
 
   render(
@@ -919,12 +893,7 @@ class FormGroupDirective<
   #unmount?: () => void
 
   constructor(partInfo: PartInfo) {
-    super(partInfo)
-    if (partInfo.type !== PartType.CHILD) {
-      throw new Error(
-        'The `group` directive must be used in the `child` attribute',
-      )
-    }
+      throw new Error("STUB");
   }
 
   update(
@@ -946,15 +915,11 @@ class FormGroupDirective<
   }
 
   protected disconnected() {
-    super.disconnected()
-    this.#unmount?.()
+      throw new Error("STUB");
   }
 
   protected reconnected() {
-    super.reconnected()
-    if (this.#group) {
-      this.#unmount = this.#group.mount()
-    }
+      throw new Error("STUB");
   }
 
   render(

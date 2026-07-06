@@ -222,7 +222,7 @@ export class TanStackFormGroup<
   mode = input<'value' | 'array'>()
 
   _api = computed(() => {
-    return new FormGroupApi(untracked(this.options))
+      throw new Error("STUB");
   })
 
   get api(): FormGroupApi<
@@ -251,98 +251,23 @@ export class TanStackFormGroup<
     TFormOnServer,
     TParentSubmitMeta
   > {
-    return this._api()
+      throw new Error("STUB");
   }
 
   options = computed(
     () =>
-      ({
-        defaultValue: this.defaultValue(),
-        asyncDebounceMs: this.asyncDebounceMs(),
-        asyncAlways: this.asyncAlways(),
-        canSubmitWhenInvalid: this.canSubmitWhenInvalid(),
-        validators: this.validators(),
-        listeners: this.listeners(),
-        defaultMeta: this.defaultMeta(),
-        defaultState: this.defaultState(),
-        onSubmitMeta: this.onSubmitMeta(),
-        onGroupSubmit: this.onGroupSubmit(),
-        onGroupSubmitInvalid: this.onGroupSubmitInvalid(),
-        name: this.name(),
-        form: this.tanstackFormGroup(),
-      }) as FormGroupApiOptions<
-        TParentData,
-        TName,
-        TData,
-        TOnMount,
-        TOnChange,
-        TOnChangeAsync,
-        TOnBlur,
-        TOnBlurAsync,
-        TOnSubmit,
-        TOnSubmitAsync,
-        TOnDynamic,
-        TOnDynamicAsync,
-        TSubmitMeta,
-        TFormOnMount,
-        TFormOnChange,
-        TFormOnChangeAsync,
-        TFormOnBlur,
-        TFormOnBlurAsync,
-        TFormOnSubmit,
-        TFormOnSubmitAsync,
-        TFormOnDynamic,
-        TFormOnDynamicAsync,
-        TFormOnServer,
-        TParentSubmitMeta
-      >,
+      { throw new Error("STUB"); },
   )
 
   injector = inject(Injector)
 
   constructor() {
-    effect((onCleanup) => {
-      const unmount = this._api().mount()
-
-      onCleanup(() => {
-        unmount()
-      })
-    })
-
-    effect(() => {
-      this._api().update(this.options())
-    })
+      throw new Error("STUB");
   }
 
   cd = inject(ChangeDetectorRef)
 
   ngOnInit() {
-    const vals = injectStore(
-      this._api().store,
-      this.mode() === 'array'
-        ? (state) => {
-            return [
-              state.meta,
-              Object.keys((state.value as unknown) ?? []).length,
-            ]
-          }
-        : undefined,
-      {
-        injector: this.injector,
-      },
-    )
-
-    // Submission lifecycle and aggregated validity now live on `state.meta`
-    // (mirroring `FieldApi.state.meta`), so subscribing to the main store
-    // above is sufficient to keep them reactive.
-
-    effect(
-      () => {
-        // Load bearing change detection check
-        const _values = vals()
-        this.cd.markForCheck()
-      },
-      { injector: this.injector },
-    )
+      throw new Error("STUB");
   }
 }

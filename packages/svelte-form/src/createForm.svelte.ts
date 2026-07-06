@@ -291,20 +291,20 @@ export function createForm<
 
   // @ts-expect-error constructor definition exists only on a type level
   extendedApi.Field = (internal, props) =>
-    Field(internal, { ...props, form: api as never } as never)
+    { throw new Error("STUB"); }
   // @ts-expect-error constructor definition exists only on a type level
   extendedApi.FormGroup = (internal, props) =>
-    FormGroup(internal, { ...props, form: api as never } as never)
-  extendedApi.useStore = (selector) => useStore(api.store, selector)
+    { throw new Error("STUB"); }
+  extendedApi.useStore = (selector) => { throw new Error("STUB"); }
   // @ts-expect-error constructor definition exists only on a type level
   extendedApi.Subscribe = (internal, props) =>
-    Subscribe(internal, { ...props, store: api.store })
+    { throw new Error("STUB"); }
 
   onMount(api.mount)
 
   // formApi.update should not have any side effects. Think of it like a `useRef`
   // that we need to keep updated every render with the most up-to-date information.
-  $effect.pre(() => api.update(opts?.()))
+  $effect.pre(() => { throw new Error("STUB"); })
 
   return extendedApi
 }

@@ -94,40 +94,7 @@ function useFormContext() {
 
 export function createFormHookContexts() {
   function useFieldContext<TData>() {
-    const field = useContext(fieldContext)
-
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (!field) {
-      throw new Error(
-        '`fieldContext` only works when within a `fieldComponent` passed to `createFormHook`',
-      )
-    }
-
-    return field as FieldApi<
-      any,
-      string,
-      TData,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any,
-      any
-    >
+      throw new Error("STUB");
   }
 
   return { fieldContext, useFieldContext, useFormContext, formContext }
@@ -347,48 +314,15 @@ export function createFormHook<
 
     // PropsWithChildren<P> is not optional in React 17
     const AppForm = useMemo<ComponentType<PropsWithChildren<{}>>>(() => {
-      return ({ children }) => {
-        return (
-          <formContext.Provider value={form}>{children}</formContext.Provider>
-        )
-      }
+        throw new Error("STUB");
     }, [form])
 
     const AppField = useMemo(() => {
-      const AppField = (({ children, ...props }) => {
-        return (
-          <form.Field {...props}>
-            {(field) => (
-              <fieldContext.Provider value={field}>
-                {children(Object.assign(field, fieldComponents))}
-              </fieldContext.Provider>
-            )}
-          </form.Field>
-        )
-      }) as FieldComponent<
-        TFormData,
-        TOnMount,
-        TOnChange,
-        TOnChangeAsync,
-        TOnBlur,
-        TOnBlurAsync,
-        TOnSubmit,
-        TOnSubmitAsync,
-        TOnDynamic,
-        TOnDynamicAsync,
-        TOnServer,
-        TSubmitMeta,
-        TComponents
-      >
-      return AppField
+        throw new Error("STUB");
     }, [form])
 
     const extendedForm = useMemo(() => {
-      return Object.assign(form, {
-        AppField,
-        AppForm,
-        ...formComponents,
-      })
+        throw new Error("STUB");
     }, [form, AppField, AppForm])
 
     return extendedForm
@@ -448,7 +382,7 @@ export function createFormHook<
     UnwrapOrAny<TRenderProps>
   >['render'] {
     return function Render(innerProps) {
-      return render({ ...props, ...innerProps })
+        throw new Error("STUB");
     }
   }
 
@@ -527,17 +461,7 @@ export function createFormHook<
     >,
   ) => ReturnType<FunctionComponent> {
     return function Render(innerProps) {
-      const fieldGroupProps = useMemo(() => {
-        return {
-          form: innerProps.form,
-          fields: innerProps.fields,
-          defaultValues,
-          formComponents,
-        }
-      }, [innerProps.form, innerProps.fields])
-      const fieldGroupApi = useFieldGroup(fieldGroupProps as any)
-
-      return render({ ...props, ...innerProps, group: fieldGroupApi as any })
+        throw new Error("STUB");
     }
   }
 
@@ -590,9 +514,7 @@ export function createFormHook<
     TComponents,
     TFormComponents
   > {
-    const form = useFormContext()
-
-    return form as never
+      throw new Error("STUB");
   }
 
   function extendForm<
@@ -603,18 +525,7 @@ export function createFormHook<
       [K in keyof TFormComponents]?: 'Error: form component names must be unique — this key already exists in the base form'
     },
   >(extension: { fieldComponents?: TNewField; formComponents?: TNewForm }) {
-    return createFormHook({
-      fieldContext,
-      formContext,
-      fieldComponents: {
-        ...fieldComponents,
-        ...extension.fieldComponents,
-      } as TComponents & TNewField,
-      formComponents: {
-        ...formComponents,
-        ...extension.formComponents,
-      } as TFormComponents & TNewForm,
-    })
+      throw new Error("STUB");
   }
 
   return {

@@ -246,13 +246,7 @@ export function useField<
   >,
 ) {
   const fieldApi = (() => {
-    const api = new FieldApi({
-      ...opts,
-      form: opts.form,
-      name: opts.name,
-    })
-
-    return api
+      throw new Error("STUB");
   })()
 
   // For array mode, only track length changes to avoid re-renders when child properties change
@@ -260,118 +254,57 @@ export function useField<
   const reactiveStateValue = useStore(
     fieldApi.store,
     (opts.mode === 'array'
-      ? (state) => state.meta._arrayVersion || 0
-      : (state) => state.value) as (
+      ? (state) => { throw new Error("STUB"); }
+      : (state) => { throw new Error("STUB"); }) as (
       state: typeof fieldApi.state,
     ) => TData | number,
   )
   const reactiveMetaIsTouched = useStore(
     fieldApi.store,
-    (state) => state.meta.isTouched,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaIsBlurred = useStore(
     fieldApi.store,
-    (state) => state.meta.isBlurred,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaIsDirty = useStore(
     fieldApi.store,
-    (state) => state.meta.isDirty,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaErrorMap = useStore(
     fieldApi.store,
-    (state) => state.meta.errorMap,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaErrorSourceMap = useStore(
     fieldApi.store,
-    (state) => state.meta.errorSourceMap,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaIsValidating = useStore(
     fieldApi.store,
-    (state) => state.meta.isValidating,
+    (state) => { throw new Error("STUB"); },
   )
 
   const fieldState = computed(() => {
-    // For array mode, reactiveStateValue is the length (for reactivity tracking),
-    // so we need to read it to register the dependency, then return the actual
-    // value from fieldApi.
-    const trackedValue = reactiveStateValue.value
-    // Read all reactive meta refs eagerly so that fieldState recomputes (and
-    // dependent renders re-run) whenever any of them change. Without this, a
-    // consumer reading `field.getMeta()` or `field.state.meta` from a render
-    // function would not re-render on meta updates, since the meta getter
-    // would never have registered those dependencies.
-    const isTouched = reactiveMetaIsTouched.value
-    const isBlurred = reactiveMetaIsBlurred.value
-    const isDirty = reactiveMetaIsDirty.value
-    const errorMap = reactiveMetaErrorMap.value
-    const errorSourceMap = reactiveMetaErrorSourceMap.value
-    const isValidating = reactiveMetaIsValidating.value
-    return {
-      value:
-        opts.mode === 'array' ? fieldApi.state.value : (trackedValue as TData),
-      meta: {
-        ...fieldApi.state.meta,
-        isTouched,
-        isBlurred,
-        isDirty,
-        errorMap,
-        errorSourceMap,
-        isValidating,
-      } satisfies AnyFieldMeta,
-    } satisfies AnyFieldApi['state']
+      throw new Error("STUB");
   })
 
   const extendedFieldApi = computed(() => {
-    const reactiveFieldApi = {
-      ...fieldApi,
-      get state() {
-        return fieldState.value
-      },
-    }
-
-    const extendedApi: FieldApi<
-      TParentData,
-      TName,
-      TData,
-      TOnMount,
-      TOnChange,
-      TOnChangeAsync,
-      TOnBlur,
-      TOnBlurAsync,
-      TOnSubmit,
-      TOnSubmitAsync,
-      TOnDynamic,
-      TOnDynamicAsync,
-      TFormOnMount,
-      TFormOnChange,
-      TFormOnChangeAsync,
-      TFormOnBlur,
-      TFormOnBlurAsync,
-      TFormOnSubmit,
-      TFormOnSubmitAsync,
-      TFormOnDynamic,
-      TFormOnDynamicAsync,
-      TFormOnServer,
-      TParentSubmitMeta
-    > = reactiveFieldApi as never
-
-    return extendedApi
+      throw new Error("STUB");
   })
 
   let cleanup!: () => void
   onMounted(() => {
-    cleanup = fieldApi.mount()
+      throw new Error("STUB");
   })
 
   onUnmounted(() => {
-    cleanup()
+      throw new Error("STUB");
   })
 
   watch(
-    () => opts,
+    () => { throw new Error("STUB"); },
     () => {
-      // Keep options up to date as they are rendered
-      fieldApi.update({ ...opts, form: opts.form } as never)
+        throw new Error("STUB");
     },
   )
 
@@ -538,13 +471,7 @@ export const Field = defineComponent(
     >,
     context: SetupContext,
   ) => {
-    const fieldApi = useField({ ...fieldOptions, ...context.attrs })
-
-    return () =>
-      context.slots.default!({
-        field: fieldApi.api,
-        state: fieldApi.state,
-      })
-  },
+        throw new Error("STUB");
+    },
   { name: 'Field', inheritAttrs: false },
 )

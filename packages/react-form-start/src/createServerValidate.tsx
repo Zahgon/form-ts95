@@ -52,88 +52,11 @@ interface CreateServerValidateOptions<
 const serverFn = createServerFn({ method: 'POST' })
   .inputValidator(
     (data: { formData: unknown; info?: unknown; defaultOpts: unknown }) => {
-      return data
-    },
+          throw new Error("STUB");
+      },
   )
   .handler(async ({ data }) => {
-    const { formData, info, defaultOpts } = data as {
-      formData: FormData
-      info?: FormDataInfo
-      defaultOpts: CreateServerValidateOptions<
-        any,
-        any,
-        any,
-        any,
-        any,
-        any,
-        any,
-        any,
-        any,
-        any,
-        any,
-        any
-      >
-    }
-    const { onServerValidate } = defaultOpts
-
-    const runValidator = async ({
-      value,
-      validationSource,
-    }: {
-      value: any
-      validationSource: 'form'
-    }) => {
-      if (isStandardSchemaValidator(onServerValidate)) {
-        return await standardSchemaValidators.validateAsync(
-          { value, validationSource },
-          onServerValidate,
-        )
-      }
-      return (onServerValidate as FormValidateAsyncFn<any>)({
-        value,
-        signal: undefined as never,
-        formApi: undefined as never,
-      })
-    }
-
-    const referer = getRequestHeader('referer')!
-
-    const decodedData = (info
-      ? decode(formData, info)
-      : decode(formData)) as never as any
-
-    const onServerError = (await runValidator({
-      value: decodedData,
-      validationSource: 'form',
-    })) as UnwrapFormAsyncValidateOrFn<any> | undefined
-
-    if (!onServerError) return decodedData
-
-    const onServerErrorVal = (
-      isGlobalFormValidationError(onServerError)
-        ? onServerError.form
-        : onServerError
-    ) as UnwrapFormAsyncValidateOrFn<any>
-
-    const formState: ServerFormState<any, any> = {
-      errorMap: {
-        onServer: onServerError,
-      },
-      values: decodedData,
-      errors: onServerErrorVal ? [onServerErrorVal] : [],
-    }
-
-    setInternalTanStackCookie(formState)
-
-    throw new ServerValidateError({
-      response: new Response('ok', {
-        headers: {
-          Location: referer,
-        },
-        status: 302,
-      }),
-      formState: formState,
-    })
+      throw new Error("STUB");
   })
 
 export const createServerValidate =
@@ -167,4 +90,4 @@ export const createServerValidate =
     >,
   ) =>
   (formData: FormData, info?: Parameters<typeof decode>[1]) =>
-    serverFn({ data: { defaultOpts, formData, info } })
+    { throw new Error("STUB"); }

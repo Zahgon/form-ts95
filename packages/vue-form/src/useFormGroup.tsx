@@ -286,29 +286,24 @@ export function useFormGroup<
   >,
 ) {
   const formGroupApi = (() => {
-    const api = new FormGroupApi({
-      ...opts,
-    })
-
-    return api
+      throw new Error("STUB");
   })()
 
-  const groupState = useStore(formGroupApi.store, (state) => state)
+  const groupState = useStore(formGroupApi.store, (state) => { throw new Error("STUB"); })
 
   let cleanup!: () => void
   onMounted(() => {
-    cleanup = formGroupApi.mount()
+      throw new Error("STUB");
   })
 
   onUnmounted(() => {
-    cleanup()
+      throw new Error("STUB");
   })
 
   watch(
-    () => opts,
+    () => { throw new Error("STUB"); },
     () => {
-      // Keep options up to date as they are rendered
-      formGroupApi.update({ ...opts } as never)
+        throw new Error("STUB");
     },
   )
 
@@ -520,13 +515,7 @@ export const FormGroup = defineComponent(
     >,
     context: SetupContext,
   ) => {
-    const groupApi = useFormGroup({ ...formGroupOptions, ...context.attrs })
-
-    return () =>
-      context.slots.default!({
-        group: groupApi.api,
-        state: groupApi.state.value,
-      })
-  },
+        throw new Error("STUB");
+    },
   { name: 'FormGroup', inheritAttrs: false },
 )

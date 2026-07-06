@@ -886,25 +886,7 @@ function getDefaultFormState<
   TOnDynamicAsync,
   TOnServer
 > {
-  return {
-    values: defaultState.values ?? ({} as never),
-    errorMap: defaultState.errorMap ?? {},
-    fieldMetaBase: defaultState.fieldMetaBase ?? ({} as never),
-    formGroupStateBase: defaultState.formGroupStateBase ?? {},
-    isSubmitted: defaultState.isSubmitted ?? false,
-    isSubmitting: defaultState.isSubmitting ?? false,
-    isValidating: defaultState.isValidating ?? false,
-    submissionAttempts: defaultState.submissionAttempts ?? 0,
-    isSubmitSuccessful: defaultState.isSubmitSuccessful ?? false,
-    validationMetaMap: defaultState.validationMetaMap ?? {
-      onChange: undefined,
-      onBlur: undefined,
-      onSubmit: undefined,
-      onMount: undefined,
-      onServer: undefined,
-      onDynamic: undefined,
-    },
-  }
+    throw new Error("STUB");
 }
 
 /**
@@ -1086,547 +1068,11 @@ export class FormApi<
       TSubmitMeta
     >,
   ) {
-    this.timeoutIds = {
-      validations: {} as Record<ValidationCause, never>,
-      listeners: {} as Record<ListenerCause, never>,
-      formListeners: {} as Record<ListenerCause, never>,
-    }
-
-    this._formId = opts?.formId ?? uuid()
-
-    this._devtoolsSubmissionOverride = false
-
-    let baseStoreVal: BaseFormState<
-      TFormData,
-      TOnMount,
-      TOnChange,
-      TOnChangeAsync,
-      TOnBlur,
-      TOnBlurAsync,
-      TOnSubmit,
-      TOnSubmitAsync,
-      TOnDynamic,
-      TOnDynamicAsync,
-      TOnServer
-    > = getDefaultFormState({
-      ...(opts?.defaultState as any),
-      values: opts?.defaultValues ?? opts?.defaultState?.values,
-      isFormValid: true,
-    })
-
-    if (opts?.transform) {
-      baseStoreVal = (
-        opts.transform({ state: baseStoreVal }) as { state: unknown }
-      ).state as never
-      for (const errKey of Object.keys(baseStoreVal.errorMap)) {
-        const errKeyMap = baseStoreVal.errorMap[errKey as never] as
-          | GlobalFormValidationError<any>
-          | undefined
-        if (
-          errKeyMap === undefined ||
-          !isGlobalFormValidationError(errKeyMap)
-        ) {
-          continue
-        }
-
-        for (const fieldName of Object.keys(errKeyMap.fields)) {
-          const fieldErr = errKeyMap.fields[fieldName]
-          if (fieldErr === undefined) {
-            continue
-          }
-          const existingFieldMeta = baseStoreVal.fieldMetaBase[
-            fieldName as never
-          ] as AnyFieldLikeMetaBase | undefined
-          baseStoreVal.fieldMetaBase[fieldName as never] = {
-            isTouched: false,
-            isValidating: false,
-            isBlurred: false,
-            isDirty: false,
-            _arrayVersion: 0,
-            ...(existingFieldMeta ?? {}),
-            errorSourceMap: {
-              ...(existingFieldMeta?.['errorSourceMap'] ?? {}),
-              onChange: 'form',
-            },
-            errorMap: {
-              ...(existingFieldMeta?.['errorMap'] ?? {}),
-              [errKey as never]: fieldErr,
-            },
-          } satisfies AnyFieldLikeMetaBase as never
-        }
-      }
-    }
-
-    this.baseStore = createStore(baseStoreVal) as never
-
-    let prevBaseStore:
-      | BaseFormState<
-          TFormData,
-          TOnMount,
-          TOnChange,
-          TOnChangeAsync,
-          TOnBlur,
-          TOnBlurAsync,
-          TOnSubmit,
-          TOnSubmitAsync,
-          TOnDynamic,
-          TOnDynamicAsync,
-          TOnServer
-        >
-      | undefined = undefined
-
-    this.fieldMetaDerived = createStore(
-      (prevVal: Record<DeepKeys<TFormData>, AnyFieldLikeMeta> | undefined) => {
-        const currBaseStore = this.baseStore.get()
-
-        let originalMetaCount = 0
-
-        const fieldMeta: FormState<
-          TFormData,
-          TOnMount,
-          TOnChange,
-          TOnChangeAsync,
-          TOnBlur,
-          TOnBlurAsync,
-          TOnSubmit,
-          TOnSubmitAsync,
-          TOnDynamic,
-          TOnDynamicAsync,
-          TOnServer
-        >['fieldMeta'] = {}
-
-        for (const fieldName of Object.keys(
-          currBaseStore.fieldMetaBase,
-        ) as Array<keyof typeof currBaseStore.fieldMetaBase>) {
-          const currBaseMeta = currBaseStore.fieldMetaBase[
-            fieldName as never
-          ] as AnyFieldLikeMetaBase
-
-          const prevBaseMeta = prevBaseStore?.fieldMetaBase[
-            fieldName as never
-          ] as AnyFieldLikeMetaBase | undefined
-
-          const prevFieldInfo =
-            prevVal?.[fieldName as never as keyof typeof prevVal]
-
-          const curFieldVal = getBy(currBaseStore.values, fieldName)
-
-          let fieldErrors = prevFieldInfo?.errors
-          if (
-            !prevBaseMeta ||
-            currBaseMeta.errorMap !== prevBaseMeta.errorMap
-          ) {
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-            fieldErrors = Object.values(currBaseMeta.errorMap ?? {}).filter(
-              (val) => val !== undefined,
-            )
-
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-            const fieldInstance = this.getFieldInfo(fieldName)?.instance
-
-            if (!fieldInstance || !fieldInstance.options.disableErrorFlat) {
-              fieldErrors = fieldErrors.flat(1)
-            }
-          }
-
-          // As primitives, we don't need to aggressively persist the same referential value for performance reasons
-          const isFieldValid = !isNonEmptyArray(fieldErrors)
-          const isFieldPristine = !currBaseMeta.isDirty
-          const isDefaultValue = evaluate(
-            curFieldVal,
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-            this.getFieldInfo(fieldName)?.instance?.options.defaultValue ??
-              getBy(this.options.defaultValues, fieldName),
-          )
-
-          if (
-            prevFieldInfo &&
-            prevFieldInfo.isPristine === isFieldPristine &&
-            prevFieldInfo.isValid === isFieldValid &&
-            prevFieldInfo.isDefaultValue === isDefaultValue &&
-            prevFieldInfo.errors === fieldErrors &&
-            currBaseMeta === prevBaseMeta
-          ) {
-            fieldMeta[fieldName] = prevFieldInfo
-            originalMetaCount++
-            continue
-          }
-
-          fieldMeta[fieldName] = {
-            ...currBaseMeta,
-            errors: fieldErrors ?? [],
-            isPristine: isFieldPristine,
-            isValid: isFieldValid,
-            isDefaultValue: isDefaultValue,
-          } satisfies AnyFieldLikeMeta as AnyFieldLikeMeta
-        }
-
-        if (!Object.keys(currBaseStore.fieldMetaBase).length) return fieldMeta
-
-        if (
-          prevVal &&
-          originalMetaCount === Object.keys(currBaseStore.fieldMetaBase).length
-        ) {
-          return prevVal
-        }
-
-        prevBaseStore = this.baseStore.get()
-
-        return fieldMeta
-      },
-    ) as never
-
-    this.formGroupMetaDerived = createStore<Record<string, AnyFormGroupMeta>>(
-      (prevVal) => {
-        const currBaseStore = this.baseStore.get()
-        const currFieldMeta = this.fieldMetaDerived.get() as Record<
-          string,
-          AnyFieldLikeMeta | undefined
-        >
-
-        const result: Record<string, AnyFormGroupMeta> = {}
-
-        for (const group of this.formGroupApis) {
-          const groupName = group.name as string
-          const lifecycle =
-            currBaseStore.formGroupStateBase[groupName] ??
-            ({
-              isSubmitted: false,
-              isSubmitting: false,
-              isValidating: false,
-              submissionAttempts: 0,
-              isSubmitSuccessful: false,
-            } as FormGroupState)
-
-          // The group's own field-meta entry (its `errorMap` is where the
-          // group's own validators write via `setFieldMeta`).
-          const ownFieldMeta = currFieldMeta[groupName] as
-            | AnyFieldLikeMeta
-            | undefined
-
-          // Aggregate validity / interaction flags across descendant fields
-          // (excluding the group's own self-entry — its validity is tracked
-          // separately via `isGroupValid`).
-          let isFieldsValidating = false
-          let isFieldsValid = true
-          let aggIsTouched = false
-          let aggIsBlurred = false
-          let aggIsDefaultValue = true
-          let aggIsDirty = false
-          for (const fieldName in currFieldMeta) {
-            if (fieldName === groupName) continue
-            if (!isFieldInGroup(groupName, fieldName)) continue
-            const m = currFieldMeta[fieldName]
-            if (!m) continue
-            if (m.isValidating) isFieldsValidating = true
-            if (!m.isValid) isFieldsValid = false
-            if (m.isTouched) aggIsTouched = true
-            if (m.isBlurred) aggIsBlurred = true
-            if (!m.isDefaultValue) aggIsDefaultValue = false
-            if (m.isDirty) aggIsDirty = true
-          }
-          const isPristine = !aggIsDirty
-          const isValidating = !!isFieldsValidating || lifecycle.isValidating
-
-          // Group's own errors derived from `ownFieldMeta.errorMap`. Mirrors
-          // the per-instance reduction that previously lived in
-          // `FormGroupApi.store`. Standard-schema group validators may
-          // return `{ group, fields }`; we only surface the `group` portion
-          // here (the `fields` portion is fanned out onto child fields by
-          // `distributeFieldErrors`).
-          const errorMap = ownFieldMeta?.errorMap ?? {}
-          const errorSourceMap = ownFieldMeta?.errorSourceMap ?? {}
-          const hasOnMountError = Boolean(
-            errorMap.onMount ||
-            Object.entries(currFieldMeta).some(
-              ([fieldName, field]) =>
-                field &&
-                fieldName !== groupName &&
-                isFieldInGroup(groupName, fieldName) &&
-                field.errorMap.onMount,
-            ),
-          )
-          const prevGroupMeta = prevVal?.[groupName]
-          let errors = prevGroupMeta?.errors ?? []
-          if (
-            !prevGroupMeta ||
-            (prevGroupMeta as unknown as { __srcErrorMap?: unknown })
-              .__srcErrorMap !== errorMap
-          ) {
-            errors = Object.values(errorMap).reduce<unknown[]>((acc, curr) => {
-              if (curr === undefined) return acc
-              if (
-                curr &&
-                typeof curr === 'object' &&
-                'fields' in (curr as object)
-              ) {
-                const groupErr = (curr as { group?: unknown }).group
-                if (groupErr !== undefined) acc.push(groupErr)
-                return acc
-              }
-              acc.push(curr)
-              return acc
-            }, [])
-          }
-
-          const isGroupValid = errors.length === 0
-          const isValid = isFieldsValid && isGroupValid
-          const submitInvalid = group.options.canSubmitWhenInvalid ?? false
-          const canSubmit =
-            (lifecycle.submissionAttempts === 0 &&
-              !aggIsTouched &&
-              !hasOnMountError) ||
-            (!isValidating && !lifecycle.isSubmitting && isValid) ||
-            submitInvalid
-
-          // Reuse previous identity when shallow-equal — keeps subscribers
-          // from re-rendering when nothing meaningful changed.
-          if (
-            prevGroupMeta &&
-            prevGroupMeta.errorMap === errorMap &&
-            prevGroupMeta.errorSourceMap === errorSourceMap &&
-            prevGroupMeta.errors === errors &&
-            prevGroupMeta.isFieldsValidating === isFieldsValidating &&
-            prevGroupMeta.isFieldsValid === isFieldsValid &&
-            prevGroupMeta.isGroupValid === isGroupValid &&
-            prevGroupMeta.isValid === isValid &&
-            prevGroupMeta.canSubmit === canSubmit &&
-            prevGroupMeta.isTouched === aggIsTouched &&
-            prevGroupMeta.isBlurred === aggIsBlurred &&
-            prevGroupMeta.isPristine === isPristine &&
-            prevGroupMeta.isDefaultValue === aggIsDefaultValue &&
-            prevGroupMeta.isDirty === aggIsDirty &&
-            prevGroupMeta.isValidating === isValidating &&
-            prevGroupMeta.isSubmitting === lifecycle.isSubmitting &&
-            prevGroupMeta.isSubmitted === lifecycle.isSubmitted &&
-            prevGroupMeta.submissionAttempts === lifecycle.submissionAttempts &&
-            prevGroupMeta.isSubmitSuccessful === lifecycle.isSubmitSuccessful
-          ) {
-            result[groupName] = prevGroupMeta
-            continue
-          }
-
-          const meta = {
-            // Submission lifecycle (spread first; `isValidating` below
-            // intentionally overrides `lifecycle.isValidating` with the
-            // OR of group-level + descendant-field validating).
-            ...lifecycle,
-            // Field-meta-base fields (so `setMeta` updates can roundtrip
-            // through `state.meta`).
-            errorMap,
-            errorSourceMap,
-            _arrayVersion: ownFieldMeta?._arrayVersion ?? 0,
-            // Aggregated descendant booleans (override field-level meaning
-            // for groups — a group's "field" itself never receives input).
-            isTouched: aggIsTouched,
-            isBlurred: aggIsBlurred,
-            isDirty: aggIsDirty,
-            isPristine,
-            isDefaultValue: aggIsDefaultValue,
-            // Aggregated validity
-            isValid,
-            errors,
-            isValidating,
-            // Group-only flags
-            isFieldsValidating,
-            isFieldsValid,
-            isGroupValid,
-            canSubmit,
-          } as AnyFormGroupMeta
-
-          // Stash the source errorMap on a non-enumerable shadow so the
-          // next derive run can short-circuit `errors` recomputation when
-          // nothing changed (mirrors `prevMeta.errorMap` tracking on the
-          // old per-instance store).
-          Object.defineProperty(meta, '__srcErrorMap', {
-            value: errorMap,
-            enumerable: false,
-            configurable: true,
-          })
-
-          result[groupName] = meta
-        }
-
-        return result
-      },
-    )
-
-    let prevBaseStoreForStore:
-      | BaseFormState<
-          TFormData,
-          TOnMount,
-          TOnChange,
-          TOnChangeAsync,
-          TOnBlur,
-          TOnBlurAsync,
-          TOnSubmit,
-          TOnSubmitAsync,
-          TOnDynamic,
-          TOnDynamicAsync,
-          TOnServer
-        >
-      | undefined = undefined
-
-    this.store = createStore<
-      FormState<
-        TFormData,
-        TOnMount,
-        TOnChange,
-        TOnChangeAsync,
-        TOnBlur,
-        TOnBlurAsync,
-        TOnSubmit,
-        TOnSubmitAsync,
-        TOnDynamic,
-        TOnDynamicAsync,
-        TOnServer
-      >
-    >((prevVal) => {
-      const currBaseStore = this.baseStore.get()
-      const currFieldMeta = this.fieldMetaDerived.get()
-
-      // Computed state
-      const fieldMetaValues = Object.values(currFieldMeta).filter(
-        Boolean,
-      ) as AnyFieldLikeMeta[]
-
-      const isFieldsValidating = fieldMetaValues.some(
-        (field) => field.isValidating,
-      )
-
-      const isFieldsValid = fieldMetaValues.every((field) => field.isValid)
-
-      const isTouched = fieldMetaValues.some((field) => field.isTouched)
-      const isBlurred = fieldMetaValues.some((field) => field.isBlurred)
-      const isDefaultValue = fieldMetaValues.every(
-        (field) => field.isDefaultValue,
-      )
-
-      const shouldInvalidateOnMount =
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        isTouched && currBaseStore.errorMap?.onMount
-
-      const isDirty = fieldMetaValues.some((field) => field.isDirty)
-      const isPristine = !isDirty
-
-      const hasOnMountError = Boolean(
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        currBaseStore.errorMap?.onMount ||
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        fieldMetaValues.some((f) => f?.errorMap?.onMount),
-      )
-
-      const isValidating = !!isFieldsValidating
-
-      // As `errors` is not a primitive, we need to aggressively persist the same referencial value for performance reasons
-      let errors = prevVal?.errors ?? []
-      if (
-        !prevBaseStoreForStore ||
-        currBaseStore.errorMap !== prevBaseStoreForStore.errorMap
-      ) {
-        errors = Object.values(currBaseStore.errorMap).reduce<
-          Array<
-            NonNullable<
-              | UnwrapFormValidateOrFn<TOnMount>
-              | UnwrapFormValidateOrFn<TOnChange>
-              | UnwrapFormAsyncValidateOrFn<TOnChangeAsync>
-              | UnwrapFormValidateOrFn<TOnBlur>
-              | UnwrapFormAsyncValidateOrFn<TOnBlurAsync>
-              | UnwrapFormValidateOrFn<TOnSubmit>
-              | UnwrapFormAsyncValidateOrFn<TOnSubmitAsync>
-              | UnwrapFormAsyncValidateOrFn<TOnServer>
-            >
-          >
-        >((prev, curr) => {
-          if (curr === undefined) return prev
-
-          if (curr && isGlobalFormValidationError(curr)) {
-            prev.push(curr.form as never)
-            return prev
-          }
-          prev.push(curr as never)
-          return prev
-        }, [])
-      }
-
-      const isFormValid = errors.length === 0
-      const isValid = isFieldsValid && isFormValid
-      const submitInvalid = this.options.canSubmitWhenInvalid ?? false
-      const canSubmit =
-        (currBaseStore.submissionAttempts === 0 &&
-          !isTouched &&
-          !hasOnMountError) ||
-        (!isValidating && !currBaseStore.isSubmitting && isValid) ||
-        submitInvalid
-
-      let errorMap = currBaseStore.errorMap
-      if (shouldInvalidateOnMount) {
-        errors = errors.filter((err) => err !== currBaseStore.errorMap.onMount)
-        errorMap = Object.assign(errorMap, { onMount: undefined })
-      }
-
-      if (
-        prevVal &&
-        prevBaseStoreForStore &&
-        prevVal.errorMap === errorMap &&
-        prevVal.fieldMeta === this.fieldMetaDerived.state &&
-        prevVal.errors === errors &&
-        prevVal.isFieldsValidating === isFieldsValidating &&
-        prevVal.isFieldsValid === isFieldsValid &&
-        prevVal.isFormValid === isFormValid &&
-        prevVal.isValid === isValid &&
-        prevVal.canSubmit === canSubmit &&
-        prevVal.isTouched === isTouched &&
-        prevVal.isBlurred === isBlurred &&
-        prevVal.isPristine === isPristine &&
-        prevVal.isDefaultValue === isDefaultValue &&
-        prevVal.isDirty === isDirty &&
-        evaluate(prevBaseStoreForStore, currBaseStore)
-      ) {
-        return prevVal
-      }
-
-      const state = {
-        ...currBaseStore,
-        errorMap,
-        fieldMeta: this.fieldMetaDerived.state,
-        errors,
-        isFieldsValidating,
-        isFieldsValid,
-        isFormValid,
-        isValid,
-        canSubmit,
-        isTouched,
-        isBlurred,
-        isPristine,
-        isDefaultValue,
-        isDirty,
-      } as FormState<
-        TFormData,
-        TOnMount,
-        TOnChange,
-        TOnChangeAsync,
-        TOnBlur,
-        TOnBlurAsync,
-        TOnSubmit,
-        TOnSubmitAsync,
-        TOnDynamic,
-        TOnDynamicAsync,
-        TOnServer
-      >
-
-      prevBaseStoreForStore = this.baseStore.get()
-
-      return state
-    })
-
-    this.handleSubmit = this.handleSubmit.bind(this)
-
-    this.update(opts || {})
+      throw new Error("STUB");
   }
 
   get formId(): string {
-    return this._formId
+      throw new Error("STUB");
   }
 
   /**
@@ -1657,40 +1103,28 @@ export class FormApi<
   mount = () => {
     // devtool broadcasts
     const cleanupDevtoolBroadcast = this.store.subscribe(() => {
-      throttleFormState(this)
+        throw new Error("STUB");
     })
 
     // devtool requests
     const cleanupFormStateListener = formEventClient.on(
       'request-form-state',
       (e) => {
-        if (e.payload.id === this._formId) {
-          formEventClient.emit('form-api', {
-            id: this._formId,
-            state: this.store.state,
-            options: this.options,
-          })
-        }
+          throw new Error("STUB");
       },
     )
 
     const cleanupFormResetListener = formEventClient.on(
       'request-form-reset',
       (e) => {
-        if (e.payload.id === this._formId) {
-          this.reset()
-        }
+          throw new Error("STUB");
       },
     )
 
     const cleanupFormForceSubmitListener = formEventClient.on(
       'request-form-force-submit',
       (e) => {
-        if (e.payload.id === this._formId) {
-          this._devtoolsSubmissionOverride = true
-          this.handleSubmit()
-          this._devtoolsSubmissionOverride = false
-        }
+          throw new Error("STUB");
       },
     )
 
@@ -1763,22 +1197,7 @@ export class FormApi<
     if (!shouldUpdateValues && !shouldUpdateState) return
 
     batch(() => {
-      this.baseStore.setState(() =>
-        getDefaultFormState(
-          Object.assign(
-            {},
-            this.state as any,
-
-            shouldUpdateState ? options.defaultState : {},
-
-            shouldUpdateValues
-              ? {
-                  values: options.defaultValues,
-                }
-              : {},
-          ),
-        ),
-      )
+        throw new Error("STUB");
     })
 
     if (shouldUpdateValues) {
@@ -1807,45 +1226,7 @@ export class FormApi<
    * @param opts - Optional options to control the reset behavior.
    */
   reset = (values?: TFormData, opts?: { keepDefaultValues?: boolean }) => {
-    const { fieldMeta: currentFieldMeta } = this.state
-    const fieldMetaBase = this.resetFieldMeta(currentFieldMeta)
-
-    if (values && !opts?.keepDefaultValues) {
-      this.options = {
-        ...this.options,
-        defaultValues: values,
-      }
-    }
-
-    this.baseStore.setState(() => {
-      let nextValues =
-        values ??
-        this.options.defaultValues ??
-        this.options.defaultState?.values
-
-      if (!values) {
-        ;(Object.values(this.fieldInfo) as FieldInfo<any>[]).forEach(
-          (fieldInfo) => {
-            if (
-              fieldInfo.instance &&
-              fieldInfo.instance.options.defaultValue !== undefined
-            ) {
-              nextValues = setBy(
-                nextValues,
-                fieldInfo.instance.name,
-                fieldInfo.instance.options.defaultValue,
-              )
-            }
-          },
-        )
-      }
-
-      return getDefaultFormState({
-        ...(this.options.defaultState as any),
-        values: nextValues,
-        fieldMetaBase,
-      })
-    })
+      throw new Error("STUB");
   }
 
   /**
@@ -1853,36 +1234,7 @@ export class FormApi<
    * This will ignore FORM level validators, use form.validate({ValidationCause}) for a complete validation
    */
   validateAllFields = async (cause: ValidationCause) => {
-    const fieldValidationPromises: Promise<ValidationError[]>[] = [] as any
-
-    batch(() => {
-      void (Object.values(this.fieldInfo) as FieldInfo<any>[]).forEach(
-        (field) => {
-          if (!field.instance) return
-          const fieldInstance = field.instance
-
-          // Validate the field
-          fieldValidationPromises.push(
-            // Remember, `validate` is either a sync operation or a promise
-            Promise.resolve().then(() =>
-              fieldInstance.validate(cause, {
-                skipFormValidation: true,
-                skipGroupValidation: true,
-              }),
-            ),
-          )
-
-          // If any fields are not touched
-          if (!field.instance.store.state.meta.isTouched) {
-            // Mark them as touched
-            field.instance.setMeta((prev) => ({ ...prev, isTouched: true }))
-          }
-        },
-      )
-    })
-
-    const fieldErrorMapMap = await Promise.all(fieldValidationPromises)
-    return fieldErrorMapMap.flat()
+      throw new Error("STUB");
   }
 
   /**
@@ -1895,35 +1247,7 @@ export class FormApi<
     index: number,
     cause: ValidationCause,
   ) => {
-    const currentValue = this.getFieldValue(field)
-
-    const lastIndex = Array.isArray(currentValue)
-      ? Math.max((currentValue as Array<unknown>).length - 1, 0)
-      : null
-
-    // We have to validate all fields that have shifted (at least the current field)
-    const fieldKeysToValidate = [`${field}[${index}]`]
-    for (let i = index + 1; i <= (lastIndex ?? 0); i++) {
-      fieldKeysToValidate.push(`${field}[${i}]`)
-    }
-
-    // We also have to include all fields that are nested in the shifted fields
-    const fieldsToValidate = Object.keys(this.fieldInfo).filter((fieldKey) =>
-      fieldKeysToValidate.some((key) => fieldKey.startsWith(key)),
-    ) as DeepKeys<TFormData>[]
-
-    // Validate the fields
-    const fieldValidationPromises: Promise<ValidationError[]>[] = [] as any
-    batch(() => {
-      fieldsToValidate.forEach((nestedField) => {
-        fieldValidationPromises.push(
-          Promise.resolve().then(() => this.validateField(nestedField, cause)),
-        )
-      })
-    })
-
-    const fieldErrorMapMap = await Promise.all(fieldValidationPromises)
-    return fieldErrorMapMap.flat()
+      throw new Error("STUB");
   }
 
   /**
@@ -1933,27 +1257,7 @@ export class FormApi<
     field: TField,
     cause: ValidationCause,
   ) => {
-    const fieldInstance = this.fieldInfo[field]?.instance
-
-    if (!fieldInstance) {
-      const { hasErrored } = this.validateSync(cause)
-
-      if (hasErrored && !this.options.asyncAlways) {
-        return this.getFieldMeta(field)?.errors ?? []
-      }
-
-      return this.validateAsync(cause).then(() => {
-        return this.getFieldMeta(field)?.errors ?? []
-      })
-    }
-
-    // If the field is not touched (same logic as in validateAllFields)
-    if (!fieldInstance.store.state.meta.isTouched) {
-      // Mark it as touched
-      fieldInstance.setMeta((prev) => ({ ...prev, isTouched: true }))
-    }
-
-    return fieldInstance.validate(cause)
+      throw new Error("STUB");
   }
 
   /**
@@ -1978,173 +1282,7 @@ export class FormApi<
       TOnDynamicAsync
     >
   } => {
-    const validates = getSyncValidatorArray(cause, {
-      ...this.options,
-      form: this,
-      group: validateOpts?.group,
-      validationLogic: this.options.validationLogic || defaultValidationLogic,
-    })
-
-    let hasErrored = false as boolean
-
-    // This map will only include fields that have errors in the current validation cycle
-    const currentValidationErrorMap: FormErrorMapFromValidator<
-      TFormData,
-      TOnMount,
-      TOnChange,
-      TOnChangeAsync,
-      TOnBlur,
-      TOnBlurAsync,
-      TOnSubmit,
-      TOnSubmitAsync,
-      TOnDynamic,
-      TOnDynamicAsync
-    > = {}
-
-    batch(() => {
-      for (const validateObj of validates) {
-        if (!validateObj.validate) continue
-
-        const rawError = this.runValidator({
-          validate: validateObj.validate,
-          value: {
-            value: this.state.values,
-            formApi: this,
-            validationSource: 'form',
-          },
-          type: 'validate',
-        })
-
-        const { formError, fieldErrors } = normalizeError<TFormData>(rawError)
-
-        const errorMapKey = getErrorMapKey(validateObj.cause)
-
-        let allFieldsToProcess = new Set([
-          ...Object.keys(this.state.fieldMeta),
-          ...Object.keys(fieldErrors || {}),
-        ] as DeepKeys<TFormData>[])
-
-        if (validateOpts?.filterFieldNames) {
-          allFieldsToProcess = new Set(
-            [...allFieldsToProcess].filter(validateOpts.filterFieldNames),
-          )
-        }
-
-        for (const field of allFieldsToProcess) {
-          if (
-            this.baseStore.state.fieldMetaBase[field] === undefined &&
-            !fieldErrors?.[field]
-          ) {
-            continue
-          }
-
-          const fieldMeta = this.getFieldMeta(field) ?? defaultFieldMeta
-          const {
-            errorMap: currentErrorMap,
-            errorSourceMap: currentErrorMapSource,
-          } = fieldMeta
-
-          const newFormValidatorError = fieldErrors?.[field]
-
-          const { newErrorValue, newSource } =
-            determineFormLevelErrorSourceAndValue({
-              newFormValidatorError,
-              isPreviousErrorFromFormValidator:
-                // These conditional checks are required, otherwise we get runtime errors.
-                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-                currentErrorMapSource?.[errorMapKey] === 'form',
-              // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-              previousErrorValue: currentErrorMap?.[errorMapKey],
-            })
-
-          if (newSource === 'form') {
-            currentValidationErrorMap[field] = {
-              ...currentValidationErrorMap[field],
-              [errorMapKey]: newFormValidatorError,
-            }
-          }
-
-          // This conditional check is required, otherwise we get runtime errors.
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-          if (currentErrorMap?.[errorMapKey] !== newErrorValue) {
-            this.setFieldMeta(field, (prev = defaultFieldMeta) => ({
-              ...prev,
-              errorMap: {
-                ...prev.errorMap,
-                [errorMapKey]: newErrorValue,
-              },
-              errorSourceMap: {
-                ...prev.errorSourceMap,
-                [errorMapKey]: newSource,
-              },
-            }))
-          }
-        }
-
-        if (!validateOpts?.dontUpdateFormErrorMap) {
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-          if (this.state.errorMap?.[errorMapKey] !== formError) {
-            this.baseStore.setState((prev) => ({
-              ...prev,
-              errorMap: {
-                ...prev.errorMap,
-                [errorMapKey]: formError,
-              },
-            }))
-          }
-        }
-
-        if (formError || fieldErrors) {
-          hasErrored = true
-        }
-      }
-
-      if (validateOpts?.dontUpdateFormErrorMap) {
-        return
-      }
-
-      /**
-       *  when we have an error for onSubmit in the state, we want
-       *  to clear the error as soon as the user enters a valid value in the field
-       */
-      const submitErrKey = getErrorMapKey('submit')
-      if (
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        this.state.errorMap?.[submitErrKey] &&
-        cause !== 'submit' &&
-        !hasErrored
-      ) {
-        this.baseStore.setState((prev) => ({
-          ...prev,
-          errorMap: {
-            ...prev.errorMap,
-            [submitErrKey]: undefined,
-          },
-        }))
-      }
-
-      /**
-       *  when we have an error for onServer in the state, we want
-       *  to clear the error as soon as the user enters a valid value in the field
-       */
-      const serverErrKey = getErrorMapKey('server')
-      if (
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        this.state.errorMap?.[serverErrKey] &&
-        cause !== 'server' &&
-        !hasErrored
-      ) {
-        this.baseStore.setState((prev) => ({
-          ...prev,
-          errorMap: {
-            ...prev.errorMap,
-            [serverErrKey]: undefined,
-          },
-        }))
-      }
-    })
-
-    return { hasErrored, fieldsErrorMap: currentValidationErrorMap }
+      throw new Error("STUB");
   }
 
   /**
@@ -2175,7 +1313,7 @@ export class FormApi<
     })
 
     if (!this.state.isFormValidating) {
-      this.baseStore.setState((prev) => ({ ...prev, isFormValidating: true }))
+      this.baseStore.setState((prev) => { throw new Error("STUB"); })
     }
 
     /**
@@ -2202,110 +1340,7 @@ export class FormApi<
 
       promises.push(
         new Promise<ValidationPromiseResult<TFormData>>(async (resolve) => {
-          let rawError!:
-            | ValidationError
-            | FormValidationError<unknown>
-            | undefined
-          try {
-            rawError = await new Promise((rawResolve, rawReject) => {
-              setTimeout(async () => {
-                if (controller.signal.aborted) return rawResolve(undefined)
-                try {
-                  rawResolve(
-                    await this.runValidator({
-                      validate: validateObj.validate!,
-                      value: {
-                        value: this.state.values,
-                        formApi: this,
-                        validationSource: 'form',
-                        signal: controller.signal,
-                      },
-                      type: 'validateAsync',
-                    }),
-                  )
-                } catch (e) {
-                  rawReject(e)
-                }
-              }, validateObj.debounceMs)
-            })
-          } catch (e: unknown) {
-            rawError = e as ValidationError
-          }
-          const { formError, fieldErrors: fieldErrorsFromNormalizeError } =
-            normalizeError<TFormData>(rawError)
-
-          if (fieldErrorsFromNormalizeError) {
-            fieldErrorsFromFormValidators = fieldErrorsFromFormValidators
-              ? {
-                  ...fieldErrorsFromFormValidators,
-                  ...fieldErrorsFromNormalizeError,
-                }
-              : fieldErrorsFromNormalizeError
-          }
-          const errorMapKey = getErrorMapKey(validateObj.cause)
-
-          let fields: DeepKeys<TFormData>[] = Object.keys(this.state.fieldMeta)
-
-          if (validateOpts?.filterFieldNames) {
-            fields = fields.filter(validateOpts.filterFieldNames)
-          }
-
-          for (const field of fields) {
-            if (this.baseStore.state.fieldMetaBase[field] === undefined) {
-              continue
-            }
-
-            const fieldMeta = this.getFieldMeta(field)
-            if (!fieldMeta) continue
-
-            const {
-              errorMap: currentErrorMap,
-              errorSourceMap: currentErrorMapSource,
-            } = fieldMeta
-
-            const newFormValidatorError = fieldErrorsFromFormValidators?.[field]
-
-            const { newErrorValue, newSource } =
-              determineFormLevelErrorSourceAndValue({
-                newFormValidatorError,
-                isPreviousErrorFromFormValidator:
-                  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-                  currentErrorMapSource?.[errorMapKey] === 'form',
-                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-                previousErrorValue: currentErrorMap?.[errorMapKey],
-              })
-
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-            if (currentErrorMap?.[errorMapKey] !== newErrorValue) {
-              this.setFieldMeta(field, (prev) => ({
-                ...prev,
-                errorMap: {
-                  ...prev.errorMap,
-                  [errorMapKey]: newErrorValue,
-                },
-                errorSourceMap: {
-                  ...prev.errorSourceMap,
-                  [errorMapKey]: newSource,
-                },
-              }))
-            }
-          }
-
-          if (!validateOpts?.dontUpdateFormErrorMap) {
-            this.baseStore.setState((prev) => ({
-              ...prev,
-              errorMap: {
-                ...prev.errorMap,
-                [errorMapKey]: formError,
-              },
-            }))
-          }
-
-          resolve(
-            fieldErrorsFromFormValidators
-              ? { fieldErrors: fieldErrorsFromFormValidators, errorMapKey }
-              : undefined,
-          )
+            throw new Error("STUB");
         }),
       )
     }
@@ -2345,10 +1380,7 @@ export class FormApi<
       }
     }
 
-    this.baseStore.setState((prev) => ({
-      ...prev,
-      isFormValidating: false,
-    }))
+    this.baseStore.setState((prev) => { throw new Error("STUB"); })
 
     return fieldsErrorMap
   }
@@ -2411,143 +1443,7 @@ export class FormApi<
    * Handles the form submission, performs validation, and calls the appropriate onSubmit or onSubmitInvalid callbacks.
    */
   _handleSubmit = async (submitMeta?: TSubmitMeta): Promise<void> => {
-    this.baseStore.setState((old) => ({
-      ...old,
-      // Submission attempts mark the form as not submitted
-      isSubmitted: false,
-      // Count submission attempts
-      submissionAttempts: old.submissionAttempts + 1,
-      isSubmitSuccessful: false, // Reset isSubmitSuccessful at the start of submission
-    }))
-
-    batch(() => {
-      void (Object.values(this.fieldInfo) as FieldInfo<any>[]).forEach(
-        (field) => {
-          if (!field.instance) return
-          // If any fields are not touched
-          if (!field.instance.store.state.meta.isTouched) {
-            // Mark them as touched
-            field.instance.setMeta((prev) => ({ ...prev, isTouched: true }))
-          }
-        },
-      )
-    })
-
-    const submitMetaArg =
-      submitMeta ?? (this.options.onSubmitMeta as TSubmitMeta)
-
-    if (!this.state.canSubmit && !this._devtoolsSubmissionOverride) {
-      this.options.onSubmitInvalid?.({
-        value: this.state.values,
-        formApi: this,
-        meta: submitMetaArg,
-      })
-      return
-    }
-
-    this.baseStore.setState((d) => ({ ...d, isSubmitting: true }))
-
-    const done = () => {
-      this.baseStore.setState((prev) => ({ ...prev, isSubmitting: false }))
-    }
-
-    await this.validateAllFields('submit')
-
-    if (!this.state.isFieldsValid) {
-      done()
-
-      this.options.onSubmitInvalid?.({
-        value: this.state.values,
-        formApi: this,
-        meta: submitMetaArg,
-      })
-
-      formEventClient.emit('form-submission', {
-        id: this._formId,
-        submissionAttempt: this.state.submissionAttempts,
-        successful: false,
-        stage: 'validateAllFields',
-        errors: (Object.values(this.state.fieldMeta) as AnyFieldLikeMeta[])
-          .map((meta) => meta.errors)
-          .flat(),
-      })
-      return
-    }
-
-    await this.validate('submit')
-
-    // Fields are invalid, do not submit
-    if (!this.state.isValid) {
-      done()
-
-      this.options.onSubmitInvalid?.({
-        value: this.state.values,
-        formApi: this,
-        meta: submitMetaArg,
-      })
-
-      formEventClient.emit('form-submission', {
-        id: this._formId,
-        submissionAttempt: this.state.submissionAttempts,
-        successful: false,
-        stage: 'validate',
-        errors: this.state.errors,
-      })
-
-      return
-    }
-
-    batch(() => {
-      void (Object.values(this.fieldInfo) as FieldInfo<TFormData>[]).forEach(
-        (field) => {
-          field.instance?.triggerOnSubmitListener()
-        },
-      )
-    })
-
-    this.options.listeners?.onSubmit?.({ formApi: this, meta: submitMetaArg })
-
-    try {
-      // Run the submit code
-      await this.options.onSubmit?.({
-        value: this.state.values,
-        formApi: this,
-        meta: submitMetaArg,
-      })
-
-      batch(() => {
-        this.baseStore.setState((prev) => ({
-          ...prev,
-          isSubmitted: true,
-          isSubmitSuccessful: true, // Set isSubmitSuccessful to true on successful submission
-        }))
-
-        formEventClient.emit('form-submission', {
-          id: this._formId,
-          submissionAttempt: this.state.submissionAttempts,
-          successful: true,
-        })
-
-        done()
-      })
-    } catch (err) {
-      this.baseStore.setState((prev) => ({
-        ...prev,
-        isSubmitSuccessful: false, // Ensure isSubmitSuccessful is false if an error occurs
-      }))
-
-      formEventClient.emit('form-submission', {
-        id: this._formId,
-        submissionAttempt: this.state.submissionAttempts,
-        successful: false,
-        stage: 'inflight',
-        onError: err,
-      })
-
-      done()
-
-      throw err
-    }
+      throw new Error("STUB");
   }
 
   /**
@@ -2555,7 +1451,7 @@ export class FormApi<
    */
   getFieldValue = <TField extends DeepKeys<TFormData>>(
     field: TField,
-  ): DeepValue<TFormData, TField> => getBy(this.state.values, field)
+  ): DeepValue<TFormData, TField> => { throw new Error("STUB"); }
 
   /**
    * Gets the metadata of the specified field.
@@ -2563,7 +1459,7 @@ export class FormApi<
   getFieldMeta = <TField extends DeepKeys<TFormData>>(
     field: TField,
   ): AnyFieldLikeMeta | undefined => {
-    return this.state.fieldMeta[field]
+      throw new Error("STUB");
   }
 
   /**
@@ -2572,7 +1468,7 @@ export class FormApi<
    * `FormGroupApi` with that name is currently mounted.
    */
   getFormGroupMeta = (name: string): AnyFormGroupMeta | undefined => {
-    return this.formGroupMetaDerived.state[name]
+      throw new Error("STUB");
   }
 
   /**
@@ -2581,17 +1477,7 @@ export class FormApi<
   getFieldInfo = <TField extends DeepKeys<TFormData>>(
     field: TField,
   ): FieldInfo<TFormData> => {
-    return (this.fieldInfo[field] ||= {
-      instance: null,
-      validationMetaMap: {
-        onChange: undefined,
-        onBlur: undefined,
-        onSubmit: undefined,
-        onMount: undefined,
-        onServer: undefined,
-        onDynamic: undefined,
-      },
-    })
+      throw new Error("STUB");
   }
 
   /**
@@ -2601,18 +1487,7 @@ export class FormApi<
     field: TField,
     updater: Updater<AnyFieldLikeMetaBase>,
   ) => {
-    this.baseStore.setState((prev) => {
-      return {
-        ...prev,
-        fieldMetaBase: {
-          ...prev.fieldMetaBase,
-          [field]: functionalUpdate(
-            updater,
-            prev.fieldMetaBase[field] as never,
-          ),
-        },
-      }
-    })
+      throw new Error("STUB");
   }
 
   /**
@@ -2621,14 +1496,7 @@ export class FormApi<
   resetFieldMeta = <TField extends DeepKeys<TFormData>>(
     fieldMeta: Partial<Record<TField, AnyFieldLikeMeta>>,
   ): Partial<Record<TField, AnyFieldLikeMeta>> => {
-    return Object.keys(fieldMeta).reduce(
-      (acc, key) => {
-        const fieldKey = key as TField
-        acc[fieldKey] = defaultFieldMeta
-        return acc
-      },
-      {} as Partial<Record<TField, AnyFieldLikeMeta>>,
-    )
+      throw new Error("STUB");
   }
 
   /**
@@ -2639,60 +1507,11 @@ export class FormApi<
     updater: Updater<DeepValue<TFormData, TField>>,
     opts?: UpdateMetaOptions,
   ) => {
-    const dontUpdateMeta = opts?.dontUpdateMeta ?? false
-    const dontRunListeners = opts?.dontRunListeners ?? false
-    const dontValidate = opts?.dontValidate ?? false
-
-    batch(() => {
-      if (!dontUpdateMeta) {
-        this.setFieldMeta(field, (prev) => ({
-          ...prev,
-          isTouched: true,
-          isDirty: true,
-          errorMap: {
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-            ...prev?.errorMap,
-            onMount: undefined,
-          },
-        }))
-      }
-
-      this.baseStore.setState((prev) => {
-        return {
-          ...prev,
-          values: setBy(prev.values, field, updater),
-        }
-      })
-    })
-
-    if (!dontRunListeners) {
-      this.getFieldInfo(field).instance?.triggerOnChangeListener()
-    }
-
-    if (!dontValidate) {
-      this.validateField(field, 'change')
-    }
+      throw new Error("STUB");
   }
 
   deleteField = <TField extends DeepKeys<TFormData>>(field: TField) => {
-    const subFieldsToDelete = Object.keys(this.fieldInfo).filter((f) => {
-      const fieldStr = field.toString()
-      return f !== fieldStr && f.startsWith(fieldStr)
-    })
-
-    const fieldsToDelete = [...subFieldsToDelete, field]
-
-    // Cleanup the last fields
-    this.baseStore.setState((prev) => {
-      const newState = { ...prev }
-      fieldsToDelete.forEach((f) => {
-        newState.values = deleteBy(newState.values, f)
-        delete this.fieldInfo[f as never]
-        delete newState.fieldMetaBase[f as never]
-      })
-
-      return newState
-    })
+      throw new Error("STUB");
   }
 
   /**
@@ -2705,13 +1524,7 @@ export class FormApi<
       : never,
     options?: UpdateMetaOptions,
   ) => {
-    this.setFieldValue(
-      field,
-      (prev) => [...(Array.isArray(prev) ? prev : []), value] as any,
-      options,
-    )
-
-    metaHelper(this).bumpArrayVersion(field)
+      throw new Error("STUB");
   }
 
   insertFieldValue = async <TField extends DeepKeysOfType<TFormData, any[]>>(
@@ -2722,30 +1535,7 @@ export class FormApi<
       : never,
     options?: UpdateMetaOptions,
   ) => {
-    this.setFieldValue(
-      field,
-      (prev) => {
-        return [
-          ...(prev as DeepValue<TFormData, TField>[]).slice(0, index),
-          value,
-          ...(prev as DeepValue<TFormData, TField>[]).slice(index),
-        ] as any
-      },
-      mergeOpts(options, { dontValidate: true }),
-    )
-
-    const dontValidate = options?.dontValidate ?? false
-    if (!dontValidate) {
-      // Validate the whole array + all fields that have shifted
-      await this.validateField(field, 'change')
-    }
-
-    // Shift down all meta after validating to make sure the new field has been mounted
-    metaHelper(this).handleArrayInsert(field, index)
-
-    if (!dontValidate) {
-      await this.validateArrayFieldsStartingFrom(field, index, 'change')
-    }
+      throw new Error("STUB");
   }
 
   /**
@@ -2759,24 +1549,7 @@ export class FormApi<
       : never,
     options?: UpdateMetaOptions,
   ) => {
-    this.setFieldValue(
-      field,
-      (prev) => {
-        return (prev as DeepValue<TFormData, TField>[]).map((d, i) =>
-          i === index ? value : d,
-        ) as any
-      },
-      mergeOpts(options, { dontValidate: true }),
-    )
-
-    metaHelper(this).bumpArrayVersion(field)
-
-    const dontValidate = options?.dontValidate ?? false
-    if (!dontValidate) {
-      // Validate the whole array + all fields that have shifted
-      await this.validateField(field, 'change')
-      await this.validateArrayFieldsStartingFrom(field, index, 'change')
-    }
+      throw new Error("STUB");
   }
 
   /**
@@ -2787,36 +1560,7 @@ export class FormApi<
     index: number,
     options?: UpdateMetaOptions,
   ) => {
-    const fieldValue = this.getFieldValue(field)
-
-    const lastIndex = Array.isArray(fieldValue)
-      ? Math.max((fieldValue as Array<unknown>).length - 1, 0)
-      : null
-
-    this.setFieldValue(
-      field,
-      (prev) => {
-        return (prev as DeepValue<TFormData, TField>[]).filter(
-          (_d, i) => i !== index,
-        ) as any
-      },
-      mergeOpts(options, { dontValidate: true }),
-    )
-
-    // Shift up all meta
-    metaHelper(this).handleArrayRemove(field, index)
-
-    if (lastIndex !== null) {
-      const start = `${field}[${lastIndex}]`
-      this.deleteField(start as never)
-    }
-
-    const dontValidate = options?.dontValidate ?? false
-    if (!dontValidate) {
-      // Validate the whole array + all fields that have shifted
-      await this.validateField(field, 'change')
-      await this.validateArrayFieldsStartingFrom(field, index, 'change')
-    }
+      throw new Error("STUB");
   }
 
   /**
@@ -2828,27 +1572,7 @@ export class FormApi<
     index2: number,
     options?: UpdateMetaOptions,
   ) => {
-    this.setFieldValue(
-      field,
-      (prev: any) => {
-        const prev1 = prev[index1]!
-        const prev2 = prev[index2]!
-        return setBy(setBy(prev, `${index1}`, prev2), `${index2}`, prev1)
-      },
-      mergeOpts(options, { dontValidate: true }),
-    )
-
-    // Swap meta
-    metaHelper(this).handleArraySwap(field, index1, index2)
-
-    const dontValidate = options?.dontValidate ?? false
-    if (!dontValidate) {
-      // Validate the whole array
-      this.validateField(field, 'change')
-      // Validate the swapped fields
-      this.validateField(`${field}[${index1}]` as DeepKeys<TFormData>, 'change')
-      this.validateField(`${field}[${index2}]` as DeepKeys<TFormData>, 'change')
-    }
+      throw new Error("STUB");
   }
 
   /**
@@ -2860,27 +1584,7 @@ export class FormApi<
     index2: number,
     options?: UpdateMetaOptions,
   ) => {
-    this.setFieldValue(
-      field,
-      (prev: any) => {
-        const next: any = [...prev]
-        next.splice(index2, 0, next.splice(index1, 1)[0])
-        return next
-      },
-      mergeOpts(options, { dontValidate: true }),
-    )
-
-    // Move meta between index1 and index2
-    metaHelper(this).handleArrayMove(field, index1, index2)
-
-    const dontValidate = options?.dontValidate ?? false
-    if (!dontValidate) {
-      // Validate the whole array
-      this.validateField(field, 'change')
-      // Validate the moved fields
-      this.validateField(`${field}[${index1}]` as DeepKeys<TFormData>, 'change')
-      this.validateField(`${field}[${index2}]` as DeepKeys<TFormData>, 'change')
-    }
+      throw new Error("STUB");
   }
 
   /**
@@ -2890,56 +1594,14 @@ export class FormApi<
     field: TField,
     options?: UpdateMetaOptions,
   ) => {
-    const fieldValue = this.getFieldValue(field)
-
-    const lastIndex = Array.isArray(fieldValue)
-      ? Math.max((fieldValue as unknown[]).length - 1, 0)
-      : null
-
-    this.setFieldValue(
-      field,
-      [] as any,
-      mergeOpts(options, { dontValidate: true }),
-    )
-
-    metaHelper(this).bumpArrayVersion(field)
-
-    if (lastIndex !== null) {
-      for (let i = 0; i <= lastIndex; i++) {
-        const fieldKey = `${field}[${i}]`
-        this.deleteField(fieldKey as never)
-      }
-    }
-
-    const dontValidate = options?.dontValidate ?? false
-    if (!dontValidate) {
-      // validate array change
-      this.validateField(field, 'change')
-    }
+      throw new Error("STUB");
   }
 
   /**
    * Resets the field value and meta to default state
    */
   resetField = <TField extends DeepKeys<TFormData>>(field: TField) => {
-    this.baseStore.setState((prev) => {
-      const fieldDefault =
-        this.getFieldInfo(field).instance?.options.defaultValue
-      const formDefault = getBy(this.options.defaultValues, field)
-      const targetValue = fieldDefault ?? formDefault
-
-      return {
-        ...prev,
-        fieldMetaBase: {
-          ...prev.fieldMetaBase,
-          [field]: defaultFieldMeta,
-        },
-        values:
-          targetValue !== undefined
-            ? setBy(prev.values, field, targetValue)
-            : prev.values,
-      }
-    })
+      throw new Error("STUB");
   }
 
   /**
@@ -2960,50 +1622,7 @@ export class FormApi<
       UnwrapFormAsyncValidateOrFn<TOnServer>
     >,
   ) => {
-    batch(() => {
-      Object.entries(errorMap).forEach(([key, value]) => {
-        const errorMapKey = key as ValidationErrorMapKeys
-
-        if (isGlobalFormValidationError(value)) {
-          const { formError, fieldErrors } = normalizeError<TFormData>(value)
-
-          for (const fieldName of Object.keys(
-            this.fieldInfo,
-          ) as DeepKeys<TFormData>[]) {
-            const fieldMeta = this.getFieldMeta(fieldName)
-            if (!fieldMeta) continue
-
-            this.setFieldMeta(fieldName, (prev) => ({
-              ...prev,
-              errorMap: {
-                ...prev.errorMap,
-                [errorMapKey]: fieldErrors?.[fieldName],
-              },
-              errorSourceMap: {
-                ...prev.errorSourceMap,
-                [errorMapKey]: 'form',
-              },
-            }))
-          }
-
-          this.baseStore.setState((prev) => ({
-            ...prev,
-            errorMap: {
-              ...prev.errorMap,
-              [errorMapKey]: formError,
-            },
-          }))
-        } else {
-          this.baseStore.setState((prev) => ({
-            ...prev,
-            errorMap: {
-              ...prev.errorMap,
-              [errorMapKey]: value,
-            },
-          }))
-        }
-      })
-    })
+      throw new Error("STUB");
   }
 
   /**
@@ -3043,31 +1662,7 @@ export class FormApi<
       { errors: ValidationError[]; errorMap: ValidationErrorMap }
     >
   } => {
-    return {
-      form: {
-        errors: this.state.errors,
-        errorMap: this.state.errorMap,
-      },
-      fields: Object.entries(this.state.fieldMeta).reduce(
-        (acc, [fieldName, fieldMeta]) => {
-          if (
-            Object.keys(fieldMeta as AnyFieldLikeMeta).length &&
-            (fieldMeta as AnyFieldLikeMeta).errors.length
-          ) {
-            acc[fieldName as DeepKeys<TFormData>] = {
-              errors: (fieldMeta as AnyFieldLikeMeta).errors,
-              errorMap: (fieldMeta as AnyFieldLikeMeta).errorMap,
-            }
-          }
-
-          return acc
-        },
-        {} as Record<
-          DeepKeys<TFormData>,
-          { errors: ValidationError[]; errorMap: ValidationErrorMap }
-        >,
-      ),
-    }
+      throw new Error("STUB");
   }
 
   /**
@@ -3076,10 +1671,7 @@ export class FormApi<
    * @param schema The standard schema to parse the form values with.
    */
   parseValuesWithSchema = (schema: StandardSchemaV1<TFormData, unknown>) => {
-    return standardSchemaValidators.validate(
-      { value: this.state.values, validationSource: 'form' },
-      schema,
-    )
+      throw new Error("STUB");
   }
 
   /**
@@ -3090,10 +1682,7 @@ export class FormApi<
   parseValuesWithSchemaAsync = (
     schema: StandardSchemaV1<TFormData, unknown>,
   ) => {
-    return standardSchemaValidators.validateAsync(
-      { value: this.state.values, validationSource: 'form' },
-      schema,
-    )
+      throw new Error("STUB");
   }
 }
 
@@ -3101,33 +1690,9 @@ function normalizeError<TFormData>(rawError?: FormValidationError<unknown>): {
   formError: ValidationError
   fieldErrors?: Partial<Record<DeepKeys<TFormData>, ValidationError>>
 } {
-  if (rawError) {
-    if (isGlobalFormValidationError(rawError)) {
-      const formError = normalizeError(rawError.form).formError
-      const fieldErrors = rawError.fields
-      return { formError, fieldErrors } as never
-    }
-
-    return { formError: rawError }
-  }
-
-  return { formError: undefined }
+    throw new Error("STUB");
 }
 
 function getErrorMapKey(cause: ValidationCause) {
-  switch (cause) {
-    case 'submit':
-      return 'onSubmit'
-    case 'blur':
-      return 'onBlur'
-    case 'mount':
-      return 'onMount'
-    case 'server':
-      return 'onServer'
-    case 'dynamic':
-      return 'onDynamic'
-    case 'change':
-    default:
-      return 'onChange'
-  }
+    throw new Error("STUB");
 }

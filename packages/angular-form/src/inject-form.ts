@@ -35,22 +35,5 @@ export function injectForm<
     TSubmitMeta
   >,
 ) {
-  const api = new FormApi<
-    TFormData,
-    TOnMount,
-    TOnChange,
-    TOnChangeAsync,
-    TOnBlur,
-    TOnBlurAsync,
-    TOnSubmit,
-    TOnSubmitAsync,
-    TOnDynamic,
-    TOnDynamicAsync,
-    TOnServer,
-    TSubmitMeta
-  >(opts)
-
-  injectStore(api.store, (state) => state.isSubmitting)
-
-  return api
+    throw new Error("STUB");
 }

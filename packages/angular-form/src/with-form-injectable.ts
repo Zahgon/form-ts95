@@ -98,23 +98,5 @@ export function injectWithForm<
   TOnServer,
   TSubmitMeta
 > {
-  const injectable = inject(TanStackWithFormInjectable)
-  return {
-    get form() {
-      return injectable._form() as FormApi<
-        TFormData,
-        TOnMount,
-        TOnChange,
-        TOnChangeAsync,
-        TOnBlur,
-        TOnBlurAsync,
-        TOnSubmit,
-        TOnSubmitAsync,
-        TOnDynamic,
-        TOnDynamicAsync,
-        TOnServer,
-        TSubmitMeta
-      >
-    },
-  }
+    throw new Error("STUB");
 }

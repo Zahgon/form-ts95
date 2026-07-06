@@ -179,15 +179,10 @@ export function useFormGroup<
 ) {
   // Keep a snapshot of options so that React Compiler doesn't
   // wrongly optimize formGroupApi.
-  const [prevOptions, setPrevOptions] = useState(() => ({
-    form: opts.form,
-    name: opts.name,
-  }))
+  const [prevOptions, setPrevOptions] = useState(() => { throw new Error("STUB"); })
 
   const [formGroupApi, setFormGroupApi] = useState(() => {
-    return new FormGroupApi({
-      ...opts,
-    })
+      throw new Error("STUB");
   })
 
   // We only want to
@@ -205,32 +200,32 @@ export function useFormGroup<
 
   const reactiveStateValue = useStore(
     formGroupApi.store,
-    (state) => state.value,
+    (state) => { throw new Error("STUB"); },
   )
 
   const reactiveMetaIsTouched = useStore(
     formGroupApi.store,
-    (state) => state.meta.isTouched,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaIsBlurred = useStore(
     formGroupApi.store,
-    (state) => state.meta.isBlurred,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaIsDirty = useStore(
     formGroupApi.store,
-    (state) => state.meta.isDirty,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaErrorMap = useStore(
     formGroupApi.store,
-    (state) => state.meta.errorMap,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaErrorSourceMap = useStore(
     formGroupApi.store,
-    (state) => state.meta.errorSourceMap,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaIsValidating = useStore(
     formGroupApi.store,
-    (state) => state.meta.isValidating,
+    (state) => { throw new Error("STUB"); },
   )
 
   // Submission lifecycle and aggregated validity now live on `state.meta`
@@ -238,104 +233,44 @@ export function useFormGroup<
   // typically read so React Compiler picks them up as dependencies.
   const reactiveMetaIsSubmitting = useStore(
     formGroupApi.store,
-    (state) => state.meta.isSubmitting,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaIsSubmitted = useStore(
     formGroupApi.store,
-    (state) => state.meta.isSubmitted,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaSubmissionAttempts = useStore(
     formGroupApi.store,
-    (state) => state.meta.submissionAttempts,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaIsSubmitSuccessful = useStore(
     formGroupApi.store,
-    (state) => state.meta.isSubmitSuccessful,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaCanSubmit = useStore(
     formGroupApi.store,
-    (state) => state.meta.canSubmit,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaIsValid = useStore(
     formGroupApi.store,
-    (state) => state.meta.isValid,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaIsFieldsValid = useStore(
     formGroupApi.store,
-    (state) => state.meta.isFieldsValid,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaIsFieldsValidating = useStore(
     formGroupApi.store,
-    (state) => state.meta.isFieldsValidating,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaIsGroupValid = useStore(
     formGroupApi.store,
-    (state) => state.meta.isGroupValid,
+    (state) => { throw new Error("STUB"); },
   )
 
   // This makes me sad, but if I understand correctly, this is what we have to do for reactivity to work properly with React compiler.
   const extendedFieldApi = useMemo(() => {
-    const reactiveFieldApi = {
-      ...formGroupApi,
-      handleSubmit: ((...props: never[]) => {
-        return formGroupApi._handleSubmit(...props)
-      }) as typeof formGroupApi.handleSubmit,
-      get state() {
-        return {
-          ...formGroupApi.state,
-          value: reactiveStateValue,
-          get meta() {
-            return {
-              ...formGroupApi.state.meta,
-              isTouched: reactiveMetaIsTouched,
-              isBlurred: reactiveMetaIsBlurred,
-              isDirty: reactiveMetaIsDirty,
-              errorMap: reactiveMetaErrorMap,
-              errorSourceMap: reactiveMetaErrorSourceMap,
-              isValidating: reactiveMetaIsValidating,
-              isSubmitting: reactiveMetaIsSubmitting,
-              isSubmitted: reactiveMetaIsSubmitted,
-              submissionAttempts: reactiveMetaSubmissionAttempts,
-              isSubmitSuccessful: reactiveMetaIsSubmitSuccessful,
-              canSubmit: reactiveMetaCanSubmit,
-              isValid: reactiveMetaIsValid,
-              isFieldsValid: reactiveMetaIsFieldsValid,
-              isFieldsValidating: reactiveMetaIsFieldsValidating,
-              isGroupValid: reactiveMetaIsGroupValid,
-            } satisfies typeof formGroupApi.state.meta
-          },
-        } satisfies typeof formGroupApi.state
-      },
-    }
-
-    const extendedApi: FormGroupApi<
-      TParentData,
-      TName,
-      TData,
-      TOnMount,
-      TOnChange,
-      TOnChangeAsync,
-      TOnBlur,
-      TOnBlurAsync,
-      TOnSubmit,
-      TOnSubmitAsync,
-      TOnDynamic,
-      TOnDynamicAsync,
-      TSubmitMeta,
-      TFormOnMount,
-      TFormOnChange,
-      TFormOnChangeAsync,
-      TFormOnBlur,
-      TFormOnBlurAsync,
-      TFormOnSubmit,
-      TFormOnSubmitAsync,
-      TFormOnDynamic,
-      TFormOnDynamicAsync,
-      TFormOnServer,
-      TParentSubmitMeta
-    > = reactiveFieldApi as never
-
-    return extendedApi
+      throw new Error("STUB");
   }, [
     formGroupApi,
     reactiveStateValue,
@@ -359,7 +294,7 @@ export function useFormGroup<
   useIsomorphicLayoutEffect(formGroupApi.mount, [formGroupApi])
 
   useIsomorphicLayoutEffect(() => {
-    formGroupApi.update(opts)
+      throw new Error("STUB");
   })
 
   return extendedFieldApi
@@ -707,13 +642,7 @@ export const FormGroup = (<
   TFormOnServer,
   TParentSubmitMeta
 >): ReturnType<FunctionComponent> => {
-  const formGroupApi = useFormGroup(formGroupOptions as any)
-
-  const jsxToDisplay = useMemo(
-    () => functionalUpdate(children, formGroupApi as any),
-    [children, formGroupApi],
-  )
-  return (<>{jsxToDisplay}</>) as never
+    throw new Error("STUB");
 }) satisfies FunctionComponent<
   FormGroupComponentProps<
     any,

@@ -23,9 +23,7 @@ function LocalSubscribe({
   lens: AnyFieldGroupApi
   selector: (state: FieldGroupState<any>) => FieldGroupState<any>
 }>): ReturnType<FunctionComponent> {
-  const data = useStore(lens.store, selector)
-
-  return <>{functionalUpdate(children, data)}</>
+    throw new Error("STUB");
 }
 
 /**
@@ -167,90 +165,7 @@ export function useFieldGroup<
   TFormComponents
 > {
   const [formLensApi] = useState(() => {
-    const api = new FieldGroupApi(opts)
-    const form =
-      opts.form instanceof FieldGroupApi
-        ? (opts.form.form as AppFieldExtendedPreactFormApi<
-            TFormData,
-            TOnMount,
-            TOnChange,
-            TOnChangeAsync,
-            TOnBlur,
-            TOnBlurAsync,
-            TOnSubmit,
-            TOnSubmitAsync,
-            TOnDynamic,
-            TOnDynamicAsync,
-            TOnServer,
-            TSubmitMeta,
-            TComponents,
-            TFormComponents
-          >)
-        : opts.form
-
-    const extendedApi: AppFieldExtendedPreactFieldGroupApi<
-      TFormData,
-      TFieldGroupData,
-      TFields,
-      TOnMount,
-      TOnChange,
-      TOnChangeAsync,
-      TOnBlur,
-      TOnBlurAsync,
-      TOnSubmit,
-      TOnSubmitAsync,
-      TOnDynamic,
-      TOnDynamicAsync,
-      TOnServer,
-      TSubmitMeta,
-      TComponents,
-      TFormComponents
-    > = api as never
-
-    extendedApi.AppForm = function AppForm(appFormProps) {
-      return <form.AppForm {...appFormProps} />
-    }
-
-    extendedApi.AppField = function AppField(props) {
-      return (
-        <form.AppField {...(formLensApi.getFormFieldOptions(props) as any)} />
-      )
-    }
-
-    extendedApi.Field = function Field(props) {
-      return <form.Field {...(formLensApi.getFormFieldOptions(props) as any)} />
-    }
-
-    extendedApi.Subscribe = function Subscribe(props: any) {
-      return (
-        <LocalSubscribe
-          lens={formLensApi}
-          selector={props.selector}
-          children={props.children}
-        />
-      )
-    }
-
-    return Object.assign(extendedApi, {
-      ...opts.formComponents,
-    }) as AppFieldExtendedPreactFieldGroupApi<
-      TFormData,
-      TFieldGroupData,
-      TFields,
-      TOnMount,
-      TOnChange,
-      TOnChangeAsync,
-      TOnBlur,
-      TOnBlurAsync,
-      TOnSubmit,
-      TOnSubmitAsync,
-      TOnDynamic,
-      TOnDynamicAsync,
-      TOnServer,
-      TSubmitMeta,
-      TComponents,
-      TFormComponents
-    >
+      throw new Error("STUB");
   })
 
   useIsomorphicLayoutEffect(formLensApi.mount, [formLensApi])

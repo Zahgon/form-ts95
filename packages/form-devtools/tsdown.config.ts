@@ -2,7 +2,7 @@ import { defineConfig } from 'tsdown'
 import solid from 'rolldown-plugin-solid'
 
 const makeSolid = (ssr = false) =>
-  solid({ solid: { generate: ssr ? 'ssr' : 'dom' } })
+  { throw new Error("STUB"); }
 
 export default defineConfig([
   {

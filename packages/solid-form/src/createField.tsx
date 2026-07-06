@@ -174,43 +174,35 @@ function makeFieldReactive<
   // piece so that consumers re-render when any meta property updates.
   // See: https://github.com/TanStack/form/issues/1961
   const reactiveStateValue = useStore(fieldApi.store, (state) =>
-    mode === 'array' ? state.meta._arrayVersion || 0 : state.value,
+    { throw new Error("STUB"); },
   )
   const reactiveMetaIsTouched = useStore(
     fieldApi.store,
-    (state) => state.meta.isTouched,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaIsBlurred = useStore(
     fieldApi.store,
-    (state) => state.meta.isBlurred,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaIsDirty = useStore(
     fieldApi.store,
-    (state) => state.meta.isDirty,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaErrorMap = useStore(
     fieldApi.store,
-    (state) => state.meta.errorMap,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaErrorSourceMap = useStore(
     fieldApi.store,
-    (state) => state.meta.errorSourceMap,
+    (state) => { throw new Error("STUB"); },
   )
   const reactiveMetaIsValidating = useStore(
     fieldApi.store,
-    (state) => state.meta.isValidating,
+    (state) => { throw new Error("STUB"); },
   )
   // Run before initial render
   createComputed(() => {
-    // Read all reactive sources to track them as dependencies
-    reactiveStateValue()
-    reactiveMetaIsTouched()
-    reactiveMetaIsBlurred()
-    reactiveMetaIsDirty()
-    reactiveMetaErrorMap()
-    reactiveMetaErrorSourceMap()
-    reactiveMetaIsValidating()
-    setField(fieldApi)
+      throw new Error("STUB");
   })
   return field
 }
@@ -283,12 +275,7 @@ export function createField<
   let mounted = false
   // Instantiates field meta and removes it when unrendered
   onMount(() => {
-    const cleanupFn = api.mount()
-    mounted = true
-    onCleanup(() => {
-      cleanupFn()
-      mounted = false
-    })
+      throw new Error("STUB");
   })
 
   /**
@@ -298,8 +285,7 @@ export function createField<
    * createComputed to make sure this effect runs before render effects
    */
   createComputed(() => {
-    if (!mounted) return
-    api.update(opts())
+      throw new Error("STUB");
   })
 
   return makeFieldReactive<
@@ -741,9 +727,8 @@ export function Field<
     TFormOnServer,
     TParentSubmitMeta
   >(() => {
-    const { children, ...fieldOptions } = props
-    return fieldOptions
+      throw new Error("STUB");
   })
 
-  return <>{createComponent(() => props.children(fieldApi), {})}</>
+  return <>{createComponent(() => { throw new Error("STUB"); }, {})}</>
 }

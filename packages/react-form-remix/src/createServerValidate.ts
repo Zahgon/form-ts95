@@ -77,56 +77,7 @@ export const createServerValidate =
     >,
   ) =>
   async (formData: FormData, info?: FormDataInfo) => {
-    const { onServerValidate } = defaultOpts
-
-    const runValidator = async ({
-      value,
-      validationSource,
-    }: {
-      value: TFormData
-      validationSource: 'form'
-    }) => {
-      if (isStandardSchemaValidator(onServerValidate)) {
-        return await standardSchemaValidators.validateAsync(
-          { value, validationSource },
-          onServerValidate,
-        )
-      }
-      return (onServerValidate as FormValidateAsyncFn<TFormData>)({
-        value,
-        signal: undefined as never,
-        formApi: undefined as never,
-      })
-    }
-
-    const values = (info
-      ? decode(formData, info)
-      : decode(formData)) as never as TFormData
-
-    const onServerError = (await runValidator({
-      value: values,
-      validationSource: 'form',
-    })) as UnwrapFormAsyncValidateOrFn<TOnServer> | undefined
-
-    if (!onServerError) return values
-
-    const onServerErrorVal = (
-      isGlobalFormValidationError(onServerError)
-        ? onServerError.form
-        : onServerError
-    ) as UnwrapFormAsyncValidateOrFn<TOnServer>
-
-    const formState: ServerFormState<TFormData, TOnServer> = {
-      errorMap: {
-        onServer: onServerError,
-      },
-      values,
-      errors: onServerErrorVal ? [onServerErrorVal] : [],
-    }
-
-    throw new ServerValidateError({
-      formState,
-    })
+      throw new Error("STUB");
   }
 
 export const initialFormState: ServerFormState<any, undefined> = {

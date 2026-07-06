@@ -114,12 +114,10 @@ function makeFormGroupReactive<
 > {
   const [group, setGroup] = createSignal(formGroupApi, { equals: false })
   // Handle shallow comparison to make sure that Derived doesn't create a new setGroup call every time
-  const store = useStore(formGroupApi.store, (store) => store)
+  const store = useStore(formGroupApi.store, (store) => { throw new Error("STUB"); })
   // Run before initial render
   createComputed(() => {
-    // Use the store to track dependencies
-    store()
-    setGroup(formGroupApi)
+      throw new Error("STUB");
   })
   return group
 }
@@ -198,12 +196,7 @@ export function createFormGroup<
   let mounted = false
   // Instantiates form group meta and removes it when unrendered
   onMount(() => {
-    const cleanupFn = api.mount()
-    mounted = true
-    onCleanup(() => {
-      cleanupFn()
-      mounted = false
-    })
+      throw new Error("STUB");
   })
 
   /**
@@ -213,8 +206,7 @@ export function createFormGroup<
    * createComputed to make sure this effect runs before render effects
    */
   createComputed(() => {
-    if (!mounted) return
-    api.update(opts())
+      throw new Error("STUB");
   })
 
   return makeFormGroupReactive<
@@ -614,9 +606,8 @@ export function FormGroup<
     TFormOnServer,
     TParentSubmitMeta
   >(() => {
-    const { children, ...formGroupOptions } = props
-    return formGroupOptions
+      throw new Error("STUB");
   })
 
-  return <>{createComponent(() => props.children(formGroupApi), {})}</>
+  return <>{createComponent(() => { throw new Error("STUB"); }, {})}</>
 }
